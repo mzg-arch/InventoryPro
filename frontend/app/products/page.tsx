@@ -45,6 +45,24 @@ export default function ProductsPage() {
     fetchProducts();
   }, [router]);
 
+  async function handleDeleteProduct(id: string) {
+  const confirmDelete = confirm("Are you sure you want to delete this product?");
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  try {
+    await api.delete(`/products/${id}`);
+
+    setProducts((currentProducts) =>
+      currentProducts.filter((product) => product.id !== id)
+    );
+  } catch {
+    alert("Failed to delete product.");
+  }
+}
+
   return (
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-6xl">
@@ -56,9 +74,12 @@ export default function ProductsPage() {
             </p>
           </div>
 
-          <button className="rounded-md bg-black px-4 py-2 text-white">
+          <button
+            onClick={() => router.push("/products/create")}
+            className="rounded-md bg-black px-4 py-2 text-white"
+            >
             Add Product
-          </button>
+            </button>
         </div>
 
         {message && <p className="mt-6 text-sm text-slate-700">{message}</p>}
@@ -74,6 +95,7 @@ export default function ProductsPage() {
                   <th className="px-4 py-3 text-sm font-semibold">Quantity</th>
                   <th className="px-4 py-3 text-sm font-semibold">Price</th>
                   <th className="px-4 py-3 text-sm font-semibold">Status</th>
+                  <th className="px-4 py-3 text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
 
@@ -81,7 +103,7 @@ export default function ProductsPage() {
                 {products.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-6 text-center text-sm text-slate-500"
                     >
                       No products found.
@@ -120,6 +142,23 @@ export default function ProductsPage() {
                           </span>
                         )}
                       </td>
+                      <td className="px-4 py-3 text-sm">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => router.push(`/products/${product.id}/edit`)}
+                            className="rounded-md border px-3 py-1 text-sm"
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                    </td>
                     </tr>
                   );
                 })}
