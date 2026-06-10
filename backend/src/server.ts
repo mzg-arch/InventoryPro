@@ -4,17 +4,20 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/auth.routes";
 import { authMiddleware, AuthRequest } from "./middleware/auth.middleware";
 dotenv.config();
+import productRoutes from "./routes/product.routes";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
+
 app.get("/", (req, res) => {
   res.send("InventoryPro API is running");
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
 
 
 app.get("/api/protected", authMiddleware, (req: AuthRequest, res) => {
