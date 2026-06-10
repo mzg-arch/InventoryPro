@@ -1,0 +1,168 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import api from "../../lib/api";
+
+interface SupplierProduct {
+  id: string;
+  name: string;
+}
+
+interface Supplier {
+  id: string;
+  name: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  products: SupplierProduct[];
+  createdAt: string;
+}
+
+export default function SuppliersPage() {
+  const router = useRouter();
+
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [message, setMessage] = useState("Loading suppliers...");
+
+  useEffect(() => {
+    async function fetchSuppliers() {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          router.push("/login");
+          return;
+        }
+
+        const response = await api.get("/suppliers");
+
+        setSuppliers(response.data.suppliers);
+        setMessage("");
+      } catch {
+        localStorage.removeItem("token");
+        router.push("/login");
+      }
+    }
+
+    fetchSuppliers();
+  }, [router]);
+
+  async function handleDeleteSupplier(id: string) {
+    const confirmDelete = confirm(
+      "Are you sure you want to delete this supplier?"
+    );
+
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await api.delete(`/suppliers/${id}`);
+
+      setSuppliers((currentSuppliers) =>
+        currentSuppliers.filter((supplier) => supplier.id !== id)
+      );
+    } catch {
+      alert("Failed to delete supplier. Make sure no products are linked to it.");
+    }
+  }
+
+  return (
+    <main className="min-h-screen bg-slate-100 p-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Suppliers</h1>
+            <p className="mt-2 text-slate-600">
+              Manage product suppliers and contact information.
+            </p>
+          </div>
+
+          <button
+            onClick={() => router.push("/suppliers/create")}
+            className="rounded-md bg-black px-4 py-2 text-white"
+          >
+            Add Supplier
+          </button>
+        </div>
+
+        {message && <p className="mt-6 text-sm text-slate-700">{message}</p>}
+
+        {!message && (
+          <div className="mt-8 overflow-hidden rounded-xl bg-white shadow">
+            <table className="w-full border-collapse text-left">
+              <thead className="bg-slate-50">
+                <tr>
+                  <th className="px-4 py-3 text-sm font-semibold">Name</th>
+                  <th className="px-4 py-3 text-sm font-semibold">Email</th>
+                  <th className="px-4 py-3 text-sm font-semibold">Phone</th>
+                  <th className="px-4 py-3 text-sm font-semibold">Address</th>
+                  <th className="px-4 py-3 text-sm font-semibold">Products</th>
+                  <th className="px-4 py-3 text-sm font-semibold">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {suppliers.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="px-4 py-6 text-center text-sm text-slate-500"
+                    >
+                      No suppliers found.
+                    </td>
+                  </tr>
+                )}
+
+                {suppliers.map((supplier) => (
+                  <tr key={supplier.id} className="border-t">
+                    <td className="px-4 py-3 text-sm font-medium">
+                      {supplier.name}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {supplier.email || "N/A"}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {supplier.phone || "N/A"}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {supplier.address || "N/A"}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {supplier.products.length}
+                    </td>
+
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            router.push(`/suppliers/${supplier.id}/edit`)
+                          }
+                          className="rounded-md border px-3 py-1 text-sm"
+                        >
+                          Edit
+                        </button>
+
+                        <button
+                          onClick={() => handleDeleteSupplier(supplier.id)}
+                          className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
