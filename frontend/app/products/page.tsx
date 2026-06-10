@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../lib/api";
+import AppLayout from "../../components/layout/AppLayout";
 
 interface Product {
   id: string;
@@ -64,6 +65,7 @@ export default function ProductsPage() {
 }
 
   return (
+    <AppLayout>
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-6xl">
         <div className="flex items-center justify-between">
@@ -168,5 +170,6 @@ export default function ProductsPage() {
         )}
       </div>
     </main>
+  </AppLayout>
   );
 }

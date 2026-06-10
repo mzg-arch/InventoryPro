@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../lib/api";
+import AppLayout from "../../components/layout/AppLayout";
 
 interface DashboardStats {
   totalProducts: number;
@@ -42,6 +43,7 @@ export default function DashboardPage() {
   }, [router]);
 
   return (
+    <AppLayout>
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-6xl">
         <div>
@@ -89,5 +91,6 @@ export default function DashboardPage() {
         )}
       </div>
     </main>
+  </AppLayout>
   );
 }
