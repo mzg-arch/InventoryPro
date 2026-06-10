@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.routes";
 import { authMiddleware, AuthRequest } from "./middleware/auth.middleware";
 dotenv.config();
 import productRoutes from "./routes/product.routes";
+import supplierRoutes from "./routes/supplier.routes";
 
 const app = express();
 
@@ -18,7 +19,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
-
+app.use("/api/suppliers", supplierRoutes);
 
 app.get("/api/protected", authMiddleware, (req: AuthRequest, res) => {
   res.json({
