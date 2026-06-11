@@ -205,17 +205,39 @@ Each user has their own products and suppliers, so inventory data is separated b
 
 ## Screenshots
 
-Screenshots will be added soon.
+### Login Page
 
-Planned screenshots:
+![Login Page](./screenshots/login.png)
 
-- Login page
-- Register page
-- Dashboard page
-- Products page
-- Create product page
-- Suppliers page
-- Mobile responsive view
+### Register Page
+
+![Register Page](./screenshots/register.png)
+
+### Dashboard Page
+
+![Dashboard Page](./screenshots/dashboard.png)
+
+### Products Page
+
+![Products Page](./screenshots/products.png)
+
+### Create Product Page
+
+![Create Product Page](./screenshots/create-product.png)
+
+### Suppliers Page
+
+![Suppliers Page](./screenshots/suppliers.png)
+
+### Add Suppliers Page
+![Add Supplier page](./screenshots/Add-supplier.png)
+
+### Mobile Dashboard
+
+![Mobile Dashboard](./screenshots/mobile-dashboard.png)
+
+### Mobile Dashboard2
+![Mobile Dashboard2](./screenshots/Mobile-dashboard2.png)
 
 ## Future Improvements
 
