@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "../../../../lib/api";
+import AppLayout from "../../../../components/layout/AppLayout";
 
 export default function EditSupplierPage() {
   const router = useRouter();
@@ -60,6 +61,7 @@ export default function EditSupplierPage() {
   }
 
   return (
+    <AppLayout>
     <main className="min-h-screen bg-slate-100 p-6">
       <div className="mx-auto max-w-2xl">
         <div>
@@ -140,5 +142,6 @@ export default function EditSupplierPage() {
         )}
       </div>
     </main>
+</AppLayout>
   );
 }

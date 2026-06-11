@@ -31,6 +31,12 @@ export function authMiddleware(
       process.env.JWT_SECRET as string
     ) as TokenPayload;
 
+    if (!decoded.userId) {
+      return res.status(401).json({
+        message: "Invalid or expired token",
+      });
+    }
+
     req.user = decoded;
 
     next();

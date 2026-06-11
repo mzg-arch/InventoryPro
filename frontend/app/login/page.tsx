@@ -7,14 +7,16 @@ import api from "../../lib/api";
 export default function LoginPage() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("micahel@example.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     try {
+      localStorage.removeItem("token");
+
       const response = await api.post("/auth/login", {
         email,
         password,

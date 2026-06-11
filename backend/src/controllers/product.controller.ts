@@ -2,11 +2,39 @@ import { Response } from "express";
 import prisma from "../config/prisma";
 import { AuthRequest } from "../middleware/auth.middleware";
 
+type ProductWithSupplier = {
+  supplier: {
+    userId: string;
+  } | null;
+};
+
+function hideUnownedSupplier<T extends ProductWithSupplier>(
+  product: T,
+  userId: string
+): T {
+  if (!product.supplier || product.supplier.userId === userId) {
+    return product;
+  }
+
+  return {
+    ...product,
+    supplier: null,
+  };
+}
+
 export async function getProducts(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const products = await prisma.product.findMany({
       where: {
-        userId: req.user?.userId,
+        userId,
       },
       include: {
         supplier: true,
@@ -16,10 +44,14 @@ export async function getProducts(req: AuthRequest, res: Response) {
       },
     });
 
+    const scopedProducts = products.map((product) =>
+      hideUnownedSupplier(product, userId)
+    );
+
     return res.status(200).json({
       message: "Products fetched successfully",
-      count: products.length,
-      products,
+      count: scopedProducts.length,
+      products: scopedProducts,
     });
   } catch (error) {
     console.error("Get products error:", error);
@@ -32,6 +64,14 @@ export async function getProducts(req: AuthRequest, res: Response) {
 
 export async function createProduct(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const {
       name,
       sku,
@@ -59,6 +99,21 @@ export async function createProduct(req: AuthRequest, res: Response) {
       });
     }
 
+    if (supplierId) {
+      const supplier = await prisma.supplier.findFirst({
+        where: {
+          id: supplierId,
+          userId,
+        },
+      });
+
+      if (!supplier) {
+        return res.status(400).json({
+          message: "Supplier not found for this user",
+        });
+      }
+    }
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -68,7 +123,7 @@ export async function createProduct(req: AuthRequest, res: Response) {
         price: Number(price),
         minStock: minStock ? Number(minStock) : 5,
         description,
-        userId: req.user?.userId as string,
+        userId,
         supplierId: supplierId || null,
       },
       include: {
@@ -78,7 +133,7 @@ export async function createProduct(req: AuthRequest, res: Response) {
 
     return res.status(201).json({
       message: "Product created successfully",
-      product,
+      product: hideUnownedSupplier(product, userId),
     });
   } catch (error) {
     console.error("Create product error:", error);
@@ -91,12 +146,20 @@ export async function createProduct(req: AuthRequest, res: Response) {
 
 export async function getProductById(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const id = req.params.id as string;
 
     const product = await prisma.product.findFirst({
       where: {
         id,
-        userId: req.user?.userId,
+        userId,
       },
       include: {
         supplier: true,
@@ -111,7 +174,7 @@ export async function getProductById(req: AuthRequest, res: Response) {
 
     return res.status(200).json({
       message: "Product fetched successfully",
-      product,
+      product: hideUnownedSupplier(product, userId),
     });
   } catch (error) {
     console.error("Get product by ID error:", error);
@@ -124,12 +187,20 @@ export async function getProductById(req: AuthRequest, res: Response) {
 
 export async function updateProduct(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const id = req.params.id as string;
 
     const existingProduct = await prisma.product.findFirst({
       where: {
         id,
-        userId: req.user?.userId,
+        userId,
       },
     });
 
@@ -150,6 +221,24 @@ export async function updateProduct(req: AuthRequest, res: Response) {
       supplierId,
     } = req.body;
 
+    const nextSupplierId =
+      supplierId === undefined ? undefined : supplierId || null;
+
+    if (nextSupplierId) {
+      const supplier = await prisma.supplier.findFirst({
+        where: {
+          id: nextSupplierId,
+          userId,
+        },
+      });
+
+      if (!supplier) {
+        return res.status(400).json({
+          message: "Supplier not found for this user",
+        });
+      }
+    }
+
     const updatedProduct = await prisma.product.update({
       where: { id },
       data: {
@@ -160,7 +249,7 @@ export async function updateProduct(req: AuthRequest, res: Response) {
         price: price !== undefined ? Number(price) : undefined,
         minStock: minStock !== undefined ? Number(minStock) : undefined,
         description,
-        supplierId: supplierId || null,
+        supplierId: nextSupplierId,
       },
       include: {
         supplier: true,
@@ -169,7 +258,7 @@ export async function updateProduct(req: AuthRequest, res: Response) {
 
     return res.status(200).json({
       message: "Product updated successfully",
-      product: updatedProduct,
+      product: hideUnownedSupplier(updatedProduct, userId),
     });
   } catch (error) {
     console.error("Update product error:", error);
@@ -182,12 +271,20 @@ export async function updateProduct(req: AuthRequest, res: Response) {
 
 export async function deleteProduct(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const id = req.params.id as string;
 
     const existingProduct = await prisma.product.findFirst({
       where: {
         id,
-        userId: req.user?.userId,
+        userId,
       },
     });
 

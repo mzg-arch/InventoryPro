@@ -6,6 +6,12 @@ export async function getDashboardStats(req: AuthRequest, res: Response) {
   try {
     const userId = req.user?.userId;
 
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const products = await prisma.product.findMany({
       where: {
         userId,
@@ -14,7 +20,11 @@ export async function getDashboardStats(req: AuthRequest, res: Response) {
 
     const totalProducts = products.length;
 
-    const totalSuppliers = await prisma.supplier.count();
+    const totalSuppliers = await prisma.supplier.count({
+      where: {
+        userId,
+      },
+    });
 
     const lowStockProducts = products.filter((product) => {
       return product.quantity <= product.minStock;

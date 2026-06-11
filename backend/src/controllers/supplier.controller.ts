@@ -4,9 +4,24 @@ import { AuthRequest } from "../middleware/auth.middleware";
 
 export async function getSuppliers(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const suppliers = await prisma.supplier.findMany({
+      where: {
+        userId,
+      },
       include: {
-        products: true,
+        products: {
+          where: {
+            userId,
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -29,6 +44,14 @@ export async function getSuppliers(req: AuthRequest, res: Response) {
 
 export async function createSupplier(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const { name, email, phone, address } = req.body;
 
     if (!name) {
@@ -43,6 +66,14 @@ export async function createSupplier(req: AuthRequest, res: Response) {
         email,
         phone,
         address,
+        userId,
+      },
+      include: {
+        products: {
+          where: {
+            userId,
+          },
+        },
       },
     });
 
@@ -61,12 +92,27 @@ export async function createSupplier(req: AuthRequest, res: Response) {
 
 export async function getSupplierById(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const id = req.params.id as string;
 
-    const supplier = await prisma.supplier.findUnique({
-      where: { id },
+    const supplier = await prisma.supplier.findFirst({
+      where: {
+        id,
+        userId,
+      },
       include: {
-        products: true,
+        products: {
+          where: {
+            userId,
+          },
+        },
       },
     });
 
@@ -91,11 +137,21 @@ export async function getSupplierById(req: AuthRequest, res: Response) {
 
 export async function updateSupplier(req: AuthRequest, res: Response) {
   try {
-    const id = req.params.id as string;
-    const { name, email, phone, address } = req.body;
+    const userId = req.user?.userId;
 
-    const existingSupplier = await prisma.supplier.findUnique({
-      where: { id },
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
+    const id = req.params.id as string;
+
+    const existingSupplier = await prisma.supplier.findFirst({
+      where: {
+        id,
+        userId,
+      },
     });
 
     if (!existingSupplier) {
@@ -104,6 +160,8 @@ export async function updateSupplier(req: AuthRequest, res: Response) {
       });
     }
 
+    const { name, email, phone, address } = req.body;
+
     const updatedSupplier = await prisma.supplier.update({
       where: { id },
       data: {
@@ -111,6 +169,13 @@ export async function updateSupplier(req: AuthRequest, res: Response) {
         email,
         phone,
         address,
+      },
+      include: {
+        products: {
+          where: {
+            userId,
+          },
+        },
       },
     });
 
@@ -129,12 +194,27 @@ export async function updateSupplier(req: AuthRequest, res: Response) {
 
 export async function deleteSupplier(req: AuthRequest, res: Response) {
   try {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+
     const id = req.params.id as string;
 
-    const existingSupplier = await prisma.supplier.findUnique({
-      where: { id },
+    const existingSupplier = await prisma.supplier.findFirst({
+      where: {
+        id,
+        userId,
+      },
       include: {
-        products: true,
+        products: {
+          where: {
+            userId,
+          },
+        },
       },
     });
 
