@@ -85,11 +85,15 @@ export default function ProductsPage() {
     return matchesSearch && matchesStockFilter;
   });
 
+  const lowStockCount = products.filter((product) => {
+    return product.quantity <= product.minStock;
+  }).length;
+
   return (
     <AppLayout>
       <main className="p-6">
         <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold">Products</h1>
               <p className="mt-2 text-slate-600">
@@ -99,7 +103,7 @@ export default function ProductsPage() {
 
             <button
               onClick={() => router.push("/products/create")}
-              className="rounded-md bg-black px-4 py-2 text-white"
+              className="rounded-md bg-black px-4 py-2 text-sm text-white"
             >
               Add Product
             </button>
@@ -109,7 +113,28 @@ export default function ProductsPage() {
 
           {!message && (
             <>
-              <div className="mt-8 flex flex-col gap-3 rounded-xl bg-white p-4 shadow md:flex-row md:items-center md:justify-between">
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                <div className="rounded-xl bg-white p-5 shadow">
+                  <p className="text-sm text-slate-500">Total Products</p>
+                  <h2 className="mt-2 text-3xl font-bold">{products.length}</h2>
+                </div>
+
+                <div className="rounded-xl bg-white p-5 shadow">
+                  <p className="text-sm text-slate-500">Low Stock Products</p>
+                  <h2 className="mt-2 text-3xl font-bold text-red-600">
+                    {lowStockCount}
+                  </h2>
+                </div>
+
+                <div className="rounded-xl bg-white p-5 shadow">
+                  <p className="text-sm text-slate-500">Showing Results</p>
+                  <h2 className="mt-2 text-3xl font-bold">
+                    {filteredProducts.length}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-3 rounded-xl bg-white p-4 shadow md:flex-row md:items-center md:justify-between">
                 <input
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -127,6 +152,10 @@ export default function ProductsPage() {
                   <option value="low">Low Stock</option>
                 </select>
               </div>
+
+              <p className="mt-3 text-sm text-slate-500">
+                Showing {filteredProducts.length} of {products.length} products
+              </p>
 
               <div className="mt-4 overflow-hidden rounded-xl bg-white shadow">
                 <table className="w-full border-collapse text-left">
@@ -153,9 +182,9 @@ export default function ProductsPage() {
                       <tr>
                         <td
                           colSpan={7}
-                          className="px-4 py-6 text-center text-sm text-slate-500"
+                          className="px-4 py-10 text-center text-sm text-slate-500"
                         >
-                          No products found.
+                          No products match your search or filter.
                         </td>
                       </tr>
                     )}

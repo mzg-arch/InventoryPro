@@ -87,11 +87,19 @@ export default function SuppliersPage() {
     );
   });
 
+  const suppliersWithProducts = suppliers.filter((supplier) => {
+    return supplier.products.length > 0;
+  }).length;
+
+  const suppliersWithoutProducts = suppliers.filter((supplier) => {
+    return supplier.products.length === 0;
+  }).length;
+
   return (
     <AppLayout>
       <main className="p-6">
         <div className="mx-auto max-w-6xl">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <h1 className="text-3xl font-bold">Suppliers</h1>
               <p className="mt-2 text-slate-600">
@@ -101,7 +109,7 @@ export default function SuppliersPage() {
 
             <button
               onClick={() => router.push("/suppliers/create")}
-              className="rounded-md bg-black px-4 py-2 text-white"
+              className="rounded-md bg-black px-4 py-2 text-sm text-white"
             >
               Add Supplier
             </button>
@@ -111,7 +119,30 @@ export default function SuppliersPage() {
 
           {!message && (
             <>
-              <div className="mt-8 rounded-xl bg-white p-4 shadow">
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                <div className="rounded-xl bg-white p-5 shadow">
+                  <p className="text-sm text-slate-500">Total Suppliers</p>
+                  <h2 className="mt-2 text-3xl font-bold">
+                    {suppliers.length}
+                  </h2>
+                </div>
+
+                <div className="rounded-xl bg-white p-5 shadow">
+                  <p className="text-sm text-slate-500">Linked Suppliers</p>
+                  <h2 className="mt-2 text-3xl font-bold">
+                    {suppliersWithProducts}
+                  </h2>
+                </div>
+
+                <div className="rounded-xl bg-white p-5 shadow">
+                  <p className="text-sm text-slate-500">Unlinked Suppliers</p>
+                  <h2 className="mt-2 text-3xl font-bold text-orange-600">
+                    {suppliersWithoutProducts}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-xl bg-white p-4 shadow">
                 <input
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -119,6 +150,10 @@ export default function SuppliersPage() {
                   className="w-full rounded-md border px-3 py-2 text-sm md:max-w-md"
                 />
               </div>
+
+              <p className="mt-3 text-sm text-slate-500">
+                Showing {filteredSuppliers.length} of {suppliers.length} suppliers
+              </p>
 
               <div className="mt-4 overflow-hidden rounded-xl bg-white shadow">
                 <table className="w-full border-collapse text-left">
@@ -144,9 +179,9 @@ export default function SuppliersPage() {
                       <tr>
                         <td
                           colSpan={6}
-                          className="px-4 py-6 text-center text-sm text-slate-500"
+                          className="px-4 py-10 text-center text-sm text-slate-500"
                         >
-                          No suppliers found.
+                          No suppliers match your search.
                         </td>
                       </tr>
                     )}
@@ -169,8 +204,16 @@ export default function SuppliersPage() {
                           {supplier.address || "N/A"}
                         </td>
 
-                        <td className="px-4 py-3 text-sm text-slate-600">
-                          {supplier.products.length}
+                        <td className="px-4 py-3 text-sm">
+                          {supplier.products.length > 0 ? (
+                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                              {supplier.products.length} linked
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
+                              None
+                            </span>
+                          )}
                         </td>
 
                         <td className="px-4 py-3 text-sm">
