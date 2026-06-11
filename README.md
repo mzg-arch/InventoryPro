@@ -2,7 +2,7 @@
 
 InventoryPro is a full-stack inventory management web application built for small businesses to manage products, suppliers, stock levels, and inventory value.
 
-The system includes authentication, user-specific data, product management, supplier management, dashboard analytics, search, filtering, and low-stock tracking.
+The system includes authentication, user-specific data, product management, supplier management, dashboard analytics, search, filtering, low-stock tracking, and a responsive modern admin interface.
 
 ## Features
 
@@ -18,7 +18,10 @@ The system includes authentication, user-specific data, product management, supp
 - Dashboard analytics
 - Low-stock product tracking
 - Total inventory value calculation
-- Responsive admin-style interface
+- Modern responsive dashboard UI
+- Desktop sidebar navigation
+- Mobile navigation menu
+- Mobile-friendly product and supplier cards
 - Logout functionality
 
 ## Tech Stack
@@ -45,6 +48,7 @@ The system includes authentication, user-specific data, product management, supp
 
 ## Project Structure
 
+```txt
 inventorypro/
 ├── backend/
 │   ├── prisma/
@@ -67,7 +71,9 @@ inventorypro/
 │   ├── lib/
 │   └── package.json
 │
+├── screenshots/
 └── README.md
+```
 
 ## Main Pages
 
@@ -85,36 +91,48 @@ inventorypro/
 
 ### Auth
 
+```txt
 POST /api/auth/register
 POST /api/auth/login
+```
 
 ### Dashboard
 
+```txt
 GET /api/dashboard/stats
+```
 
 ### Products
 
+```txt
 GET /api/products
 POST /api/products
 GET /api/products/:id
 PATCH /api/products/:id
 DELETE /api/products/:id
+```
 
 ### Suppliers
 
+```txt
 GET /api/suppliers
 POST /api/suppliers
 GET /api/suppliers/:id
 PATCH /api/suppliers/:id
 DELETE /api/suppliers/:id
+```
 
 ## Environment Variables
 
 Create a `.env` file inside the `backend` folder.
 
+```env
 DATABASE_URL="your_supabase_postgresql_connection_string"
 JWT_SECRET="your_jwt_secret"
 PORT=5000
+```
+
+Do not commit your real `.env` file to GitHub.
 
 ## How to Run Locally
 
@@ -123,6 +141,7 @@ PORT=5000
 ```bash
 git clone https://github.com/mzg-arch/InventoryPro.git
 cd InventoryPro
+```
 
 ### 2. Run the backend
 
@@ -136,8 +155,9 @@ npm run dev
 
 The backend runs on:
 
-
+```txt
 http://localhost:5000
+```
 
 ### 3. Run the frontend
 
@@ -151,9 +171,27 @@ npm run dev
 
 The frontend runs on:
 
-
+```txt
 http://localhost:3000
+```
 
+## Build Test
+
+### Frontend build
+
+```bash
+cd frontend
+npm run build
+```
+
+### Backend build
+
+```bash
+cd backend
+npm run build
+```
+
+Both frontend and backend production builds have been tested successfully.
 
 ## Database Models
 
@@ -168,6 +206,16 @@ Each user has their own products and suppliers, so inventory data is separated b
 ## Screenshots
 
 Screenshots will be added soon.
+
+Planned screenshots:
+
+- Login page
+- Register page
+- Dashboard page
+- Products page
+- Create product page
+- Suppliers page
+- Mobile responsive view
 
 ## Future Improvements
 
