@@ -25,6 +25,7 @@ export default function SuppliersPage() {
 
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [message, setMessage] = useState("Loading suppliers...");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     async function fetchSuppliers() {
@@ -42,6 +43,7 @@ export default function SuppliersPage() {
         setMessage("");
       } catch {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         router.push("/login");
       }
     }
@@ -69,103 +71,136 @@ export default function SuppliersPage() {
     }
   }
 
+  const filteredSuppliers = suppliers.filter((supplier) => {
+    const searchText = searchTerm.toLowerCase();
+
+    const name = supplier.name.toLowerCase();
+    const email = supplier.email?.toLowerCase() || "";
+    const phone = supplier.phone?.toLowerCase() || "";
+    const address = supplier.address?.toLowerCase() || "";
+
+    return (
+      name.includes(searchText) ||
+      email.includes(searchText) ||
+      phone.includes(searchText) ||
+      address.includes(searchText)
+    );
+  });
+
   return (
     <AppLayout>
-    <main className="min-h-screen bg-slate-100 p-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Suppliers</h1>
-            <p className="mt-2 text-slate-600">
-              Manage product suppliers and contact information.
-            </p>
+      <main className="p-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Suppliers</h1>
+              <p className="mt-2 text-slate-600">
+                Manage product suppliers and contact information.
+              </p>
+            </div>
+
+            <button
+              onClick={() => router.push("/suppliers/create")}
+              className="rounded-md bg-black px-4 py-2 text-white"
+            >
+              Add Supplier
+            </button>
           </div>
 
-          <button
-            onClick={() => router.push("/suppliers/create")}
-            className="rounded-md bg-black px-4 py-2 text-white"
-          >
-            Add Supplier
-          </button>
+          {message && <p className="mt-6 text-sm text-slate-700">{message}</p>}
+
+          {!message && (
+            <>
+              <div className="mt-8 rounded-xl bg-white p-4 shadow">
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name, email, phone, or address..."
+                  className="w-full rounded-md border px-3 py-2 text-sm md:max-w-md"
+                />
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-xl bg-white shadow">
+                <table className="w-full border-collapse text-left">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-sm font-semibold">Name</th>
+                      <th className="px-4 py-3 text-sm font-semibold">Email</th>
+                      <th className="px-4 py-3 text-sm font-semibold">Phone</th>
+                      <th className="px-4 py-3 text-sm font-semibold">
+                        Address
+                      </th>
+                      <th className="px-4 py-3 text-sm font-semibold">
+                        Products
+                      </th>
+                      <th className="px-4 py-3 text-sm font-semibold">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredSuppliers.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-4 py-6 text-center text-sm text-slate-500"
+                        >
+                          No suppliers found.
+                        </td>
+                      </tr>
+                    )}
+
+                    {filteredSuppliers.map((supplier) => (
+                      <tr key={supplier.id} className="border-t">
+                        <td className="px-4 py-3 text-sm font-medium">
+                          {supplier.name}
+                        </td>
+
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {supplier.email || "N/A"}
+                        </td>
+
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {supplier.phone || "N/A"}
+                        </td>
+
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {supplier.address || "N/A"}
+                        </td>
+
+                        <td className="px-4 py-3 text-sm text-slate-600">
+                          {supplier.products.length}
+                        </td>
+
+                        <td className="px-4 py-3 text-sm">
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() =>
+                                router.push(`/suppliers/${supplier.id}/edit`)
+                              }
+                              className="rounded-md border px-3 py-1 text-sm"
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteSupplier(supplier.id)}
+                              className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
-
-        {message && <p className="mt-6 text-sm text-slate-700">{message}</p>}
-
-        {!message && (
-          <div className="mt-8 overflow-hidden rounded-xl bg-white shadow">
-            <table className="w-full border-collapse text-left">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-sm font-semibold">Name</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Email</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Phone</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Address</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Products</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {suppliers.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className="px-4 py-6 text-center text-sm text-slate-500"
-                    >
-                      No suppliers found.
-                    </td>
-                  </tr>
-                )}
-
-                {suppliers.map((supplier) => (
-                  <tr key={supplier.id} className="border-t">
-                    <td className="px-4 py-3 text-sm font-medium">
-                      {supplier.name}
-                    </td>
-
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {supplier.email || "N/A"}
-                    </td>
-
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {supplier.phone || "N/A"}
-                    </td>
-
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {supplier.address || "N/A"}
-                    </td>
-
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {supplier.products.length}
-                    </td>
-
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() =>
-                            router.push(`/suppliers/${supplier.id}/edit`)
-                          }
-                          className="rounded-md border px-3 py-1 text-sm"
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          onClick={() => handleDeleteSupplier(supplier.id)}
-                          className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </main>
+      </main>
     </AppLayout>
   );
 }
