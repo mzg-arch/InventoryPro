@@ -22,6 +22,8 @@ export default function ProductsPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [message, setMessage] = useState("Loading products...");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [stockFilter, setStockFilter] = useState("all");
 
   useEffect(() => {
     async function fetchProducts() {
@@ -39,6 +41,7 @@ export default function ProductsPage() {
         setMessage("");
       } catch {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
         router.push("/login");
       }
     }
@@ -47,129 +50,182 @@ export default function ProductsPage() {
   }, [router]);
 
   async function handleDeleteProduct(id: string) {
-  const confirmDelete = confirm("Are you sure you want to delete this product?");
+    const confirmDelete = confirm("Are you sure you want to delete this product?");
 
-  if (!confirmDelete) {
-    return;
+    if (!confirmDelete) {
+      return;
+    }
+
+    try {
+      await api.delete(`/products/${id}`);
+
+      setProducts((currentProducts) =>
+        currentProducts.filter((product) => product.id !== id)
+      );
+    } catch {
+      alert("Failed to delete product.");
+    }
   }
 
-  try {
-    await api.delete(`/products/${id}`);
+  const filteredProducts = products.filter((product) => {
+    const searchText = searchTerm.toLowerCase();
 
-    setProducts((currentProducts) =>
-      currentProducts.filter((product) => product.id !== id)
-    );
-  } catch {
-    alert("Failed to delete product.");
-  }
-}
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchText) ||
+      product.sku.toLowerCase().includes(searchText) ||
+      product.category.toLowerCase().includes(searchText);
+
+    const isLowStock = product.quantity <= product.minStock;
+
+    const matchesStockFilter =
+      stockFilter === "all" ||
+      (stockFilter === "low" && isLowStock) ||
+      (stockFilter === "in-stock" && !isLowStock);
+
+    return matchesSearch && matchesStockFilter;
+  });
 
   return (
     <AppLayout>
-    <main className="min-h-screen bg-slate-100 p-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Products</h1>
-            <p className="mt-2 text-slate-600">
-              Manage your inventory products and stock levels.
-            </p>
-          </div>
+      <main className="p-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Products</h1>
+              <p className="mt-2 text-slate-600">
+                Manage your inventory products and stock levels.
+              </p>
+            </div>
 
-          <button
-            onClick={() => router.push("/products/create")}
-            className="rounded-md bg-black px-4 py-2 text-white"
+            <button
+              onClick={() => router.push("/products/create")}
+              className="rounded-md bg-black px-4 py-2 text-white"
             >
-            Add Product
+              Add Product
             </button>
-        </div>
-
-        {message && <p className="mt-6 text-sm text-slate-700">{message}</p>}
-
-        {!message && (
-          <div className="mt-8 overflow-hidden rounded-xl bg-white shadow">
-            <table className="w-full border-collapse text-left">
-              <thead className="bg-slate-50">
-                <tr>
-                  <th className="px-4 py-3 text-sm font-semibold">Name</th>
-                  <th className="px-4 py-3 text-sm font-semibold">SKU</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Category</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Quantity</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Price</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Status</th>
-                  <th className="px-4 py-3 text-sm font-semibold">Actions</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {products.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-4 py-6 text-center text-sm text-slate-500"
-                    >
-                      No products found.
-                    </td>
-                  </tr>
-                )}
-
-                {products.map((product) => {
-                  const isLowStock = product.quantity <= product.minStock;
-
-                  return (
-                    <tr key={product.id} className="border-t">
-                      <td className="px-4 py-3 text-sm font-medium">
-                        {product.name}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {product.sku}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {product.category}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {product.quantity}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
-                        {product.price.toLocaleString()} ETB
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        {isLowStock ? (
-                          <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
-                            Low Stock
-                          </span>
-                        ) : (
-                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
-                            In Stock
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => router.push(`/products/${product.id}/edit`)}
-                            className="rounded-md border px-3 py-1 text-sm"
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                    </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
-        )}
-      </div>
-    </main>
-  </AppLayout>
+
+          {message && <p className="mt-6 text-sm text-slate-700">{message}</p>}
+
+          {!message && (
+            <>
+              <div className="mt-8 flex flex-col gap-3 rounded-xl bg-white p-4 shadow md:flex-row md:items-center md:justify-between">
+                <input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search by name, SKU, or category..."
+                  className="w-full rounded-md border px-3 py-2 text-sm md:max-w-md"
+                />
+
+                <select
+                  value={stockFilter}
+                  onChange={(e) => setStockFilter(e.target.value)}
+                  className="rounded-md border px-3 py-2 text-sm"
+                >
+                  <option value="all">All Stock</option>
+                  <option value="in-stock">In Stock</option>
+                  <option value="low">Low Stock</option>
+                </select>
+              </div>
+
+              <div className="mt-4 overflow-hidden rounded-xl bg-white shadow">
+                <table className="w-full border-collapse text-left">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-sm font-semibold">Name</th>
+                      <th className="px-4 py-3 text-sm font-semibold">SKU</th>
+                      <th className="px-4 py-3 text-sm font-semibold">
+                        Category
+                      </th>
+                      <th className="px-4 py-3 text-sm font-semibold">
+                        Quantity
+                      </th>
+                      <th className="px-4 py-3 text-sm font-semibold">Price</th>
+                      <th className="px-4 py-3 text-sm font-semibold">Status</th>
+                      <th className="px-4 py-3 text-sm font-semibold">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredProducts.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-4 py-6 text-center text-sm text-slate-500"
+                        >
+                          No products found.
+                        </td>
+                      </tr>
+                    )}
+
+                    {filteredProducts.map((product) => {
+                      const isLowStock = product.quantity <= product.minStock;
+
+                      return (
+                        <tr key={product.id} className="border-t">
+                          <td className="px-4 py-3 text-sm font-medium">
+                            {product.name}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {product.sku}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {product.category}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {product.quantity}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm text-slate-600">
+                            {product.price.toLocaleString()} ETB
+                          </td>
+
+                          <td className="px-4 py-3 text-sm">
+                            {isLowStock ? (
+                              <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-700">
+                                Low Stock
+                              </span>
+                            ) : (
+                              <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-700">
+                                In Stock
+                              </span>
+                            )}
+                          </td>
+
+                          <td className="px-4 py-3 text-sm">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() =>
+                                  router.push(`/products/${product.id}/edit`)
+                                }
+                                className="rounded-md border px-3 py-1 text-sm"
+                              >
+                                Edit
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteProduct(product.id)}
+                                className="rounded-md bg-red-600 px-3 py-1 text-sm text-white"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </div>
+      </main>
+    </AppLayout>
   );
 }
