@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import api from "../../../../lib/api";
 import AppLayout from "../../../../components/layout/AppLayout";
@@ -14,9 +14,9 @@ export default function EditProductPage() {
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
   const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("0");
-  const [price, setPrice] = useState("0");
-  const [minStock, setMinStock] = useState("5");
+  const [quantity, setQuantity] = useState("");
+  const [price, setPrice] = useState("");
+  const [minStock, setMinStock] = useState("");
   const [description, setDescription] = useState("");
   const [message, setMessage] = useState("Loading product...");
 
@@ -49,10 +49,12 @@ export default function EditProductPage() {
     fetchProduct();
   }, [productId, router]);
 
-  async function handleUpdateProduct(e: React.FormEvent<HTMLFormElement>) {
+  async function handleUpdateProduct(e: FormEvent) {
     e.preventDefault();
 
     try {
+      setMessage("Updating product...");
+
       await api.patch(`/products/${productId}`, {
         name,
         sku,
@@ -65,123 +67,166 @@ export default function EditProductPage() {
 
       router.push("/products");
     } catch {
-      setMessage("Failed to update product. Check the fields and try again.");
+      setMessage("Failed to update product. Please check your inputs.");
     }
   }
 
   return (
     <AppLayout>
-    <main className="min-h-screen bg-slate-100 p-6">
-      <div className="mx-auto max-w-2xl">
-        <div>
-          <h1 className="text-3xl font-bold">Edit Product</h1>
-          <p className="mt-2 text-slate-600">
-            Update product information and stock details.
-          </p>
-        </div>
-
-        {message === "Loading product..." && (
-          <p className="mt-6 text-sm text-slate-700">{message}</p>
-        )}
-
-        {message !== "Loading product..." && message && (
-          <p className="mt-6 text-sm text-red-600">{message}</p>
-        )}
-
-        {!message && (
-          <form
-            onSubmit={handleUpdateProduct}
-            className="mt-8 space-y-4 rounded-xl bg-white p-6 shadow"
-          >
+      <div className="mx-auto max-w-5xl">
+        <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-900 p-6 text-white shadow-2xl md:p-8">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div>
-              <label className="text-sm font-medium">Product Name</label>
-              <input
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
+              <p className="text-sm font-medium text-blue-200">
+                Product Management
+              </p>
+
+              <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
+                Edit Product
+              </h1>
+
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+                Update product details, stock quantity, price, category, and
+                minimum stock level.
+              </p>
             </div>
 
-            <div>
-              <label className="text-sm font-medium">SKU</label>
-              <input
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-              />
-            </div>
+            <button
+              onClick={() => router.push("/products")}
+              className="w-full rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20 md:w-auto"
+            >
+              Back to Products
+            </button>
+          </div>
+        </section>
 
-            <div>
-              <label className="text-sm font-medium">Category</label>
-              <input
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-              />
-            </div>
+        <section className="mt-6 rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur md:p-8">
+          {message === "Loading product..." ? (
+            <p className="rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-700">
+              {message}
+            </p>
+          ) : (
+            <form onSubmit={handleUpdateProduct} className="space-y-6">
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Product Name
+                  </label>
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <label className="text-sm font-medium">Quantity</label>
-                <input
-                  className="mt-1 w-full rounded-md border px-3 py-2"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  type="number"
-                />
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    SKU
+                  </label>
+                  <input
+                    value={sku}
+                    onChange={(e) => setSku(e.target.value)}
+                    required
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Category
+                  </label>
+                  <input
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    required
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Quantity
+                  </label>
+                  <input
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    required
+                    type="number"
+                    min="0"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Price
+                  </label>
+                  <input
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    required
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-sm font-semibold text-slate-700">
+                    Minimum Stock
+                  </label>
+                  <input
+                    value={minStock}
+                    onChange={(e) => setMinStock(e.target.value)}
+                    required
+                    type="number"
+                    min="0"
+                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="text-sm font-medium">Price</label>
-                <input
-                  className="mt-1 w-full rounded-md border px-3 py-2"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  type="number"
+                <label className="text-sm font-semibold text-slate-700">
+                  Description
+                </label>
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  placeholder="Optional product notes..."
+                  className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium">Minimum Stock</label>
-                <input
-                  className="mt-1 w-full rounded-md border px-3 py-2"
-                  value={minStock}
-                  onChange={(e) => setMinStock(e.target.value)}
-                  type="number"
-                />
+              {message && (
+                <p className="rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-700">
+                  {message}
+                </p>
+              )}
+
+              <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => router.push("/products")}
+                  className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700 hover:shadow"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-500"
+                >
+                  Save Changes
+                </button>
               </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <textarea
-                className="mt-1 w-full rounded-md border px-3 py-2"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={4}
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                className="rounded-md bg-black px-4 py-2 text-white"
-              >
-                Save Changes
-              </button>
-
-              <button
-                type="button"
-                onClick={() => router.push("/products")}
-                className="rounded-md border px-4 py-2"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
+            </form>
+          )}
+        </section>
       </div>
-    </main>
     </AppLayout>
   );
 }

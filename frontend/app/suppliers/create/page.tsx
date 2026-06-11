@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import api from "../../../lib/api";
+import AppLayout from "../../../components/layout/AppLayout";
 
 export default function CreateSupplierPage() {
   const router = useRouter();
@@ -13,16 +14,11 @@ export default function CreateSupplierPage() {
   const [address, setAddress] = useState("");
   const [message, setMessage] = useState("");
 
-  async function handleCreateSupplier(e: React.FormEvent<HTMLFormElement>) {
+  async function handleCreateSupplier(e: FormEvent) {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        router.push("/login");
-        return;
-      }
+      setMessage("Creating supplier...");
 
       await api.post("/suppliers", {
         name,
@@ -33,86 +29,118 @@ export default function CreateSupplierPage() {
 
       router.push("/suppliers");
     } catch {
-      setMessage("Failed to create supplier. Check the fields and try again.");
+      setMessage("Failed to create supplier. Please check your inputs.");
     }
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 p-6">
-      <div className="mx-auto max-w-2xl">
-        <div>
-          <h1 className="text-3xl font-bold">Add Supplier</h1>
-          <p className="mt-2 text-slate-600">
-            Create a new supplier for your inventory.
-          </p>
-        </div>
+    <AppLayout>
+      <div className="mx-auto max-w-5xl">
+        <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-900 p-6 text-white shadow-2xl md:p-8">
+          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-200">
+                Supplier Management
+              </p>
 
-        <form
-          onSubmit={handleCreateSupplier}
-          className="mt-8 space-y-4 rounded-xl bg-white p-6 shadow"
-        >
-          <div>
-            <label className="text-sm font-medium">Supplier Name</label>
-            <input
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="ABC Electronics"
-            />
-          </div>
+              <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
+                Add Supplier
+              </h1>
 
-          <div>
-            <label className="text-sm font-medium">Email</label>
-            <input
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="abc@example.com"
-              type="email"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Phone</label>
-            <input
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="0912345678"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Address</label>
-            <textarea
-              className="mt-1 w-full rounded-md border px-3 py-2"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Addis Ababa"
-              rows={4}
-            />
-          </div>
-
-          {message && <p className="text-sm text-red-600">{message}</p>}
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="rounded-md bg-black px-4 py-2 text-white"
-            >
-              Create Supplier
-            </button>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+                Add a new supplier contact with email, phone number, and address
+                information.
+              </p>
+            </div>
 
             <button
-              type="button"
               onClick={() => router.push("/suppliers")}
-              className="rounded-md border px-4 py-2"
+              className="w-full rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20 md:w-auto"
             >
-              Cancel
+              Back to Suppliers
             </button>
           </div>
-        </form>
+        </section>
+
+        <section className="mt-6 rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur md:p-8">
+          <form onSubmit={handleCreateSupplier} className="space-y-6">
+            <div className="grid gap-5 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-semibold text-slate-700">
+                  Supplier Name
+                </label>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  placeholder="Example: Addis Tech Supplies"
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-700">
+                  Email
+                </label>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  placeholder="Example: supplier@email.com"
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-700">
+                  Phone
+                </label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Example: +251 911 123 456"
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-semibold text-slate-700">
+                  Address
+                </label>
+                <input
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="Example: Addis Ababa, Ethiopia"
+                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+                />
+              </div>
+            </div>
+
+            {message && (
+              <p className="rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-700">
+                {message}
+              </p>
+            )}
+
+            <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => router.push("/suppliers")}
+                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700 hover:shadow"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-500"
+              >
+                Create Supplier
+              </button>
+            </div>
+          </form>
+        </section>
       </div>
-    </main>
+    </AppLayout>
   );
 }
