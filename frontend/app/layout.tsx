@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "InventoryPro",
-  description: "Product, supplier, and stock management.",
+  description:
+    "Manage products, suppliers, stock levels, and inventory summaries from one organized workspace.",
 };
 
 export default function RootLayout({
