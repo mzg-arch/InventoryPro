@@ -2,12 +2,16 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import api from "../../../lib/api";
 import AppLayout from "../../../components/layout/AppLayout";
+import PageHeader from "../../../components/layout/PageHeader";
+import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
 
 export default function CreateProductPage() {
   const router = useRouter();
-
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
   const [category, setCategory] = useState("");
@@ -22,7 +26,6 @@ export default function CreateProductPage() {
 
     try {
       setMessage("Creating product...");
-
       await api.post("/products", {
         name,
         sku,
@@ -32,165 +35,82 @@ export default function CreateProductPage() {
         minStock: Number(minStock),
         description,
       });
-
       router.push("/products");
     } catch {
       setMessage("Failed to create product. Please check your inputs.");
     }
   }
 
+  const isSubmitting = message === "Creating product...";
+
   return (
     <AppLayout>
-      <div className="mx-auto max-w-5xl">
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-900 p-6 text-white shadow-2xl md:p-8">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-200">
-                Product Management
-              </p>
+      <div className="mx-auto max-w-4xl">
+        <PageHeader
+          eyebrow="Product management"
+          title="Add product"
+          description="Create a product record with pricing, quantity, and a minimum stock level."
+          actions={
+            <Button variant="outline" onClick={() => router.push("/products")}>
+              <ChevronLeft aria-hidden="true" />
+              Back to products
+            </Button>
+          }
+        />
 
-              <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
-                Add Product
-              </h1>
+        <section className="mt-5 rounded-lg border border-border bg-surface-primary shadow-xs">
+          <form onSubmit={handleCreateProduct}>
+            <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="name">Product name</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Wireless Mouse" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="sku">SKU</Label>
+                <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} required placeholder="WM-001" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="category">Category</Label>
+                <Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} required placeholder="Electronics" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="quantity">Quantity</Label>
+                <Input id="quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required type="number" min="0" placeholder="25" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="price">Price (ETB)</Label>
+                <Input id="price" value={price} onChange={(e) => setPrice(e.target.value)} required type="number" min="0" step="0.01" placeholder="1500" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="minStock">Minimum stock</Label>
+                <Input id="minStock" value={minStock} onChange={(e) => setMinStock(e.target.value)} required type="number" min="0" placeholder="5" />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <Label htmlFor="description">Description</Label>
+                <textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Optional product notes"
+                  rows={3}
+                  className="field-control resize-y"
+                />
+              </div>
 
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                Add a new inventory item with stock quantity, pricing, category,
-                and minimum stock level.
-              </p>
+              {message && (
+                <p className="status-message md:col-span-2" role="status" aria-live="polite">
+                  {message}
+                </p>
+              )}
             </div>
 
-            <button
-              onClick={() => router.push("/products")}
-              className="w-full rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20 md:w-auto"
-            >
-              Back to Products
-            </button>
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur md:p-8">
-          <form onSubmit={handleCreateProduct} className="space-y-6">
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Product Name
-                </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  placeholder="Example: Wireless Mouse"
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  SKU
-                </label>
-                <input
-                  value={sku}
-                  onChange={(e) => setSku(e.target.value)}
-                  required
-                  placeholder="Example: WM-001"
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Category
-                </label>
-                <input
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  required
-                  placeholder="Example: Electronics"
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Quantity
-                </label>
-                <input
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  required
-                  type="number"
-                  min="0"
-                  placeholder="Example: 25"
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Price
-                </label>
-                <input
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  required
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  placeholder="Example: 1500"
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Minimum Stock
-                </label>
-                <input
-                  value={minStock}
-                  onChange={(e) => setMinStock(e.target.value)}
-                  required
-                  type="number"
-                  min="0"
-                  placeholder="Example: 5"
-                  className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-semibold text-slate-700">
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Optional product notes..."
-                rows={4}
-                className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-              />
-            </div>
-
-            {message && (
-              <p className="rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-700">
-                {message}
-              </p>
-            )}
-
-            <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => router.push("/products")}
-                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700 hover:shadow"
-              >
+            <div className="flex flex-col-reverse gap-2 border-t border-border bg-surface-secondary px-4 py-3 sm:flex-row sm:justify-end sm:px-5">
+              <Button type="button" variant="outline" onClick={() => router.push("/products")}>
                 Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-500"
-              >
-                Create Product
-              </button>
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Creating product..." : "Create product"}
+              </Button>
             </div>
           </form>
         </section>

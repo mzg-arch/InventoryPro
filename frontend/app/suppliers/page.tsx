@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Link2, Plus, Search, Truck, Unlink } from "lucide-react";
 import api from "../../lib/api";
 import AppLayout from "../../components/layout/AppLayout";
+import PageHeader from "../../components/layout/PageHeader";
+import MetricCard from "../../components/ui/metric-card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 
 interface SupplierProduct {
   id: string;
@@ -22,7 +27,6 @@ interface Supplier {
 
 export default function SuppliersPage() {
   const router = useRouter();
-
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [message, setMessage] = useState("Loading suppliers...");
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,14 +35,12 @@ export default function SuppliersPage() {
     async function fetchSuppliers() {
       try {
         const token = localStorage.getItem("token");
-
         if (!token) {
           router.push("/login");
           return;
         }
 
         const response = await api.get("/suppliers");
-
         setSuppliers(response.data.suppliers);
         setMessage("");
       } catch {
@@ -53,18 +55,14 @@ export default function SuppliersPage() {
 
   async function handleDeleteSupplier(id: string) {
     const confirmDelete = confirm(
-      "Are you sure you want to delete this supplier?"
+      "Are you sure you want to delete this supplier?",
     );
-
-    if (!confirmDelete) {
-      return;
-    }
+    if (!confirmDelete) return;
 
     try {
       await api.delete(`/suppliers/${id}`);
-
       setSuppliers((currentSuppliers) =>
-        currentSuppliers.filter((supplier) => supplier.id !== id)
+        currentSuppliers.filter((supplier) => supplier.id !== id),
       );
     } catch {
       alert("Failed to delete supplier. Make sure no products are linked to it.");
@@ -73,281 +71,215 @@ export default function SuppliersPage() {
 
   const filteredSuppliers = suppliers.filter((supplier) => {
     const searchText = searchTerm.toLowerCase();
-
-    const name = supplier.name.toLowerCase();
-    const email = supplier.email?.toLowerCase() || "";
-    const phone = supplier.phone?.toLowerCase() || "";
-    const address = supplier.address?.toLowerCase() || "";
-
     return (
-      name.includes(searchText) ||
-      email.includes(searchText) ||
-      phone.includes(searchText) ||
-      address.includes(searchText)
+      supplier.name.toLowerCase().includes(searchText) ||
+      (supplier.email?.toLowerCase() || "").includes(searchText) ||
+      (supplier.phone?.toLowerCase() || "").includes(searchText) ||
+      (supplier.address?.toLowerCase() || "").includes(searchText)
     );
   });
 
-  const suppliersWithProducts = suppliers.filter((supplier) => {
-    return supplier.products.length > 0;
-  }).length;
-
-  const suppliersWithoutProducts = suppliers.filter((supplier) => {
-    return supplier.products.length === 0;
-  }).length;
+  const suppliersWithProducts = suppliers.filter(
+    (supplier) => supplier.products.length > 0,
+  ).length;
+  const suppliersWithoutProducts = suppliers.filter(
+    (supplier) => supplier.products.length === 0,
+  ).length;
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-7xl">
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-900 p-6 text-white shadow-2xl md:p-8">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-200">
-                Supplier Management
-              </p>
-
-              <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
-                Suppliers
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                Manage supplier contacts, track linked products, and keep your
-                inventory sourcing organized.
-              </p>
-            </div>
-
-            <button
+      <div className="mx-auto max-w-[1440px]">
+        <PageHeader
+          eyebrow="Supplier management"
+          title="Suppliers"
+          description="Maintain supplier contact records and review their linked products."
+          actions={
+            <Button
               onClick={() => router.push("/suppliers/create")}
-              className="w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:-translate-y-0.5 hover:bg-blue-500 md:w-auto"
+              className="w-full sm:w-auto"
             >
-              Add Supplier
-            </button>
-          </div>
-        </section>
+              <Plus aria-hidden="true" />
+              Add supplier
+            </Button>
+          }
+        />
 
-        {message && (
-          <p className="mt-6 rounded-2xl bg-white/80 p-5 text-sm text-slate-700 shadow">
-            {message}
-          </p>
-        )}
-
-        {!message && (
+        {message ? (
+          <p className="status-message mt-5">{message}</p>
+        ) : (
           <>
-            <section className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-3xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                <p className="text-sm font-medium text-slate-500">
-                  Total Suppliers
-                </p>
-                <h2 className="mt-3 text-4xl font-black text-slate-950">
-                  {suppliers.length}
-                </h2>
-                <p className="mt-3 text-xs text-slate-500">
-                  Supplier records saved
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-green-100 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                <p className="text-sm font-medium text-slate-500">
-                  Linked Suppliers
-                </p>
-                <h2 className="mt-3 text-4xl font-black text-green-600">
-                  {suppliersWithProducts}
-                </h2>
-                <p className="mt-3 text-xs text-slate-500">
-                  Suppliers with products
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-orange-100 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                <p className="text-sm font-medium text-slate-500">
-                  Unlinked Suppliers
-                </p>
-                <h2 className="mt-3 text-4xl font-black text-orange-600">
-                  {suppliersWithoutProducts}
-                </h2>
-                <p className="mt-3 text-xs text-slate-500">
-                  Suppliers without products
-                </p>
-              </div>
-            </section>
-
-            <section className="mt-6 rounded-3xl border border-white/60 bg-white/90 p-4 shadow-xl backdrop-blur">
-              <input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name, email, phone, or address..."
-                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:max-w-md"
+            <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
+              <MetricCard
+                label="Total suppliers"
+                value={suppliers.length}
+                description="Contact records"
+                icon={<Truck className="size-3.5" aria-hidden="true" />}
               />
-
-              <p className="mt-4 text-sm text-slate-500">
-                Showing {filteredSuppliers.length} of {suppliers.length}{" "}
-                suppliers
-              </p>
+              <MetricCard
+                label="Linked suppliers"
+                value={suppliersWithProducts}
+                description="With product records"
+                icon={<Link2 className="size-3.5" aria-hidden="true" />}
+              />
+              <div className="col-span-2 lg:col-span-1">
+                <MetricCard
+                  label="Unlinked suppliers"
+                  value={suppliersWithoutProducts}
+                  description="Without products"
+                  icon={<Unlink className="size-3.5" aria-hidden="true" />}
+                />
+              </div>
             </section>
 
-            {/* Mobile cards */}
-            <section className="mt-5 grid gap-4 md:hidden">
+            <section className="mt-4 rounded-lg border border-border bg-surface-primary p-3 shadow-xs">
+              <div className="relative max-w-md">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-text-muted"
+                  aria-hidden="true"
+                />
+                <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search name, email, phone, or address"
+                  aria-label="Search suppliers"
+                  className="pl-9"
+                />
+              </div>
+            </section>
+
+            <section className="mt-4 grid gap-3 md:hidden" aria-label="Suppliers">
               {filteredSuppliers.length === 0 && (
-                <div className="rounded-3xl border border-white/60 bg-white/90 p-8 text-center text-sm text-slate-500 shadow-xl">
-                  No suppliers match your search.
+                <div className="rounded-lg border border-border bg-surface-primary px-5 py-10 text-center shadow-xs">
+                  <p className="text-sm font-medium text-text-primary">No suppliers found</p>
+                  <p className="mt-1 text-xs text-text-muted">Adjust your search term.</p>
                 </div>
               )}
 
               {filteredSuppliers.map((supplier) => (
-                <div
+                <article
                   key={supplier.id}
-                  className="rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur"
+                  className="rounded-lg border border-border bg-surface-primary p-4 shadow-xs"
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-lg font-black text-slate-950">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="truncate text-sm font-semibold text-text-primary">
                         {supplier.name}
                       </h2>
-                      <p className="mt-1 text-xs text-slate-500">
-                        {supplier.email || "No email"}
+                      <p className="mt-0.5 truncate text-xs text-text-muted">
+                        {supplier.email || "No email provided"}
                       </p>
                     </div>
-
-                    {supplier.products.length > 0 ? (
-                      <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                        Linked
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                        None
-                      </span>
-                    )}
+                    <span className="shrink-0 rounded-full border border-border bg-surface-secondary px-2 py-0.5 text-[11px] font-medium text-text-secondary">
+                      {supplier.products.length > 0
+                        ? `${supplier.products.length} linked`
+                        : "Unlinked"}
+                    </span>
                   </div>
 
-                  <div className="mt-5 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-slate-50 p-3">
-                      <p className="text-xs text-slate-500">Phone</p>
-                      <p className="mt-1 break-all text-sm font-bold text-slate-900">
-                        {supplier.phone || "N/A"}
-                      </p>
+                  <dl className="mt-4 space-y-2 border-y border-border py-3 text-xs">
+                    <div className="grid grid-cols-[70px_1fr] gap-3">
+                      <dt className="text-text-muted">Phone</dt>
+                      <dd className="break-words text-text-primary">
+                        {supplier.phone || "Not provided"}
+                      </dd>
                     </div>
-
-                    <div className="rounded-2xl bg-slate-50 p-3">
-                      <p className="text-xs text-slate-500">Products</p>
-                      <p className="mt-1 text-sm font-bold text-slate-900">
-                        {supplier.products.length}
-                      </p>
+                    <div className="grid grid-cols-[70px_1fr] gap-3">
+                      <dt className="text-text-muted">Address</dt>
+                      <dd className="break-words text-text-primary">
+                        {supplier.address || "Not provided"}
+                      </dd>
                     </div>
+                  </dl>
 
-                    <div className="col-span-2 rounded-2xl bg-slate-50 p-3">
-                      <p className="text-xs text-slate-500">Address</p>
-                      <p className="mt-1 break-all text-sm font-bold text-slate-900">
-                        {supplier.address || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-5 flex gap-2">
-                    <button
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}
-                      className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                      className="flex-1"
                     >
                       Edit
-                    </button>
-
-                    <button
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
                       onClick={() => handleDeleteSupplier(supplier.id)}
-                      className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-500"
+                      className="flex-1"
                     >
                       Delete
-                    </button>
+                    </Button>
                   </div>
-                </div>
+                </article>
               ))}
             </section>
 
-            {/* Desktop table */}
-            <section className="mt-5 hidden overflow-hidden rounded-3xl border border-white/60 bg-white/90 shadow-xl backdrop-blur md:block">
-              <table className="w-full border-collapse text-left">
-                <thead className="bg-slate-950 text-white">
-                  <tr>
-                    <th className="px-5 py-4 text-sm font-semibold">Name</th>
-                    <th className="px-5 py-4 text-sm font-semibold">Email</th>
-                    <th className="px-5 py-4 text-sm font-semibold">Phone</th>
-                    <th className="px-5 py-4 text-sm font-semibold">
-                      Address
-                    </th>
-                    <th className="px-5 py-4 text-sm font-semibold">
-                      Products
-                    </th>
-                    <th className="px-5 py-4 text-sm font-semibold">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredSuppliers.length === 0 && (
+            <section className="mt-4 hidden overflow-hidden rounded-lg border border-border bg-surface-primary shadow-xs md:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+                  <thead className="border-b border-border bg-surface-secondary text-xs text-text-muted">
                     <tr>
-                      <td
-                        colSpan={6}
-                        className="px-5 py-12 text-center text-sm text-slate-500"
+                      <th className="px-4 py-2.5 font-medium">Supplier</th>
+                      <th className="px-4 py-2.5 font-medium">Phone</th>
+                      <th className="px-4 py-2.5 font-medium">Address</th>
+                      <th className="px-4 py-2.5 font-medium">Products</th>
+                      <th className="px-4 py-2.5 text-right font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSuppliers.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="px-4 py-12 text-center text-sm text-text-muted">
+                          No suppliers match your search.
+                        </td>
+                      </tr>
+                    )}
+                    {filteredSuppliers.map((supplier) => (
+                      <tr
+                        key={supplier.id}
+                        className="border-t border-border transition-colors duration-150 hover:bg-surface-secondary"
                       >
-                        No suppliers match your search.
-                      </td>
-                    </tr>
-                  )}
-
-                  {filteredSuppliers.map((supplier) => (
-                    <tr
-                      key={supplier.id}
-                      className="border-t border-slate-100 transition hover:bg-blue-50/60"
-                    >
-                      <td className="px-5 py-4 text-sm font-bold text-slate-950">
-                        {supplier.name}
-                      </td>
-
-                      <td className="px-5 py-4 text-sm text-slate-600">
-                        {supplier.email || "N/A"}
-                      </td>
-
-                      <td className="px-5 py-4 text-sm text-slate-600">
-                        {supplier.phone || "N/A"}
-                      </td>
-
-                      <td className="px-5 py-4 text-sm text-slate-600">
-                        {supplier.address || "N/A"}
-                      </td>
-
-                      <td className="px-5 py-4 text-sm">
-                        {supplier.products.length > 0 ? (
-                          <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                            {supplier.products.length} linked
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-text-primary">{supplier.name}</p>
+                          <p className="mt-0.5 text-xs text-text-muted">
+                            {supplier.email || "No email"}
+                          </p>
+                        </td>
+                        <td className="px-4 py-3 text-text-secondary">
+                          {supplier.phone || "Not provided"}
+                        </td>
+                        <td className="max-w-xs px-4 py-3 text-text-secondary">
+                          <p className="truncate">{supplier.address || "Not provided"}</p>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="rounded-full border border-border bg-surface-secondary px-2 py-0.5 text-[11px] font-medium text-text-secondary">
+                            {supplier.products.length > 0
+                              ? `${supplier.products.length} linked`
+                              : "Unlinked"}
                           </span>
-                        ) : (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-                            None
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-5 py-4 text-sm">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() =>
-                              router.push(`/suppliers/${supplier.id}/edit`)
-                            }
-                            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700 hover:shadow"
-                          >
-                            Edit
-                          </button>
-
-                          <button
-                            onClick={() => handleDeleteSupplier(supplier.id)}
-                            className="rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-500 hover:shadow"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => router.push(`/suppliers/${supplier.id}/edit`)}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteSupplier(supplier.id)}
+                            >
+                              Delete
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </section>
           </>
         )}

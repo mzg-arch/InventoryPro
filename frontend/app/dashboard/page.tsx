@@ -2,8 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  AlertTriangle,
+  Boxes,
+  CircleDollarSign,
+  PackagePlus,
+  Plus,
+  Truck,
+} from "lucide-react";
 import api from "../../lib/api";
 import AppLayout from "../../components/layout/AppLayout";
+import PageHeader from "../../components/layout/PageHeader";
+import MetricCard from "../../components/ui/metric-card";
+import { Button } from "../../components/ui/button";
 
 interface DashboardStats {
   totalProducts: number;
@@ -26,7 +37,6 @@ interface Product {
 
 export default function DashboardPage() {
   const router = useRouter();
-
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [message, setMessage] = useState("Loading dashboard...");
@@ -57,233 +67,296 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [router]);
 
-  const lowStockProducts = products.filter((product) => {
-    return product.quantity <= product.minStock;
-  });
-
+  const lowStockProducts = products.filter(
+    (product) => product.quantity <= product.minStock,
+  );
   const recentProducts = products.slice(0, 5);
+  const healthyProductCount = products.length - lowStockProducts.length;
+  const healthyStockPercent = products.length
+    ? Math.round((healthyProductCount / products.length) * 100)
+    : 0;
 
   return (
     <AppLayout>
-      <main>
-        <div className="mx-auto max-w-7xl">
-          <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-900 p-8 text-white shadow-2xl">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm font-medium text-blue-200">
-                  Inventory Overview
-                </p>
-
-                <h1 className="mt-2 text-4xl font-black tracking-tight">
-                  Dashboard
-                </h1>
-
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                  Track your products, suppliers, stock levels, and total
-                  inventory value from one clean workspace.
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                <button
-                  onClick={() => router.push("/products/create")}
-                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:-translate-y-0.5 hover:bg-blue-500"
-                >
-                  Add Product
-                </button>
-
-                <button
-                  onClick={() => router.push("/suppliers/create")}
-                  className="rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20"
-                >
-                  Add Supplier
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {message && (
-            <p className="mt-6 rounded-2xl bg-white/80 p-5 text-sm text-slate-700 shadow">
-              {message}
-            </p>
-          )}
-
-          {stats && (
+      <div className="mx-auto max-w-[1440px]">
+        <PageHeader
+          eyebrow="Inventory overview"
+          title="Dashboard"
+          description="Review stock levels, inventory value, and the records that need attention."
+          actions={
             <>
-              <section className="mt-6 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
-                <div className="rounded-3xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                  <p className="text-sm font-medium text-slate-500">
-                    Total Products
-                  </p>
-                  <h2 className="mt-3 text-4xl font-black text-slate-950">
-                    {stats.totalProducts}
-                  </h2>
-                  <p className="mt-3 text-xs text-slate-500">
-                    Products in your inventory
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                  <p className="text-sm font-medium text-slate-500">
-                    Total Suppliers
-                  </p>
-                  <h2 className="mt-3 text-4xl font-black text-slate-950">
-                    {stats.totalSuppliers}
-                  </h2>
-                  <p className="mt-3 text-xs text-slate-500">
-                    Supplier contact records
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-red-100 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                  <p className="text-sm font-medium text-slate-500">
-                    Low Stock
-                  </p>
-                  <h2 className="mt-3 text-4xl font-black text-red-600">
-                    {stats.lowStockProducts}
-                  </h2>
-                  <p className="mt-3 text-xs text-slate-500">
-                    Products needing restock
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl xl:col-span-1">
-                  <p className="text-sm font-medium text-slate-500">
-                    Inventory Value
-                  </p>
-                  <h2 className="mt-3 text-2xl font-black text-slate-950">
-                    {stats.totalInventoryValue.toLocaleString()} ETB
-                  </h2>
-                  <p className="mt-3 text-xs text-slate-500">
-                    Quantity multiplied by price
-                  </p>
-                </div>
-
-                <div className="rounded-3xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                  <p className="text-sm font-medium text-slate-500">
-                    Stock Quantity
-                  </p>
-                  <h2 className="mt-3 text-4xl font-black text-slate-950">
-                    {stats.totalStockQuantity}
-                  </h2>
-                  <p className="mt-3 text-xs text-slate-500">
-                    Total available units
-                  </p>
-                </div>
-              </section>
-
-              <section className="mt-6 grid gap-6 xl:grid-cols-2">
-                <div className="rounded-3xl border border-white/60 bg-white/90 p-6 shadow-xl backdrop-blur">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <h2 className="text-xl font-black text-slate-950">
-                        Low Stock Products
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Products at or below minimum stock.
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => router.push("/products")}
-                      className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700 hover:shadow"
-                    >
-                      View All
-                    </button>
-                  </div>
-
-                  <div className="mt-6 space-y-3">
-                    {lowStockProducts.length === 0 && (
-                      <p className="rounded-2xl border border-green-100 bg-green-50 p-5 text-sm font-medium text-green-700">
-                        No low-stock products right now. Your inventory looks
-                        healthy.
-                      </p>
-                    )}
-
-                    {lowStockProducts.slice(0, 5).map((product) => (
-                      <div
-                        key={product.id}
-                        className="group flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:shadow-lg"
-                      >
-                        <div>
-                          <p className="font-bold text-slate-900">
-                            {product.name}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            SKU: {product.sku} • {product.category}
-                          </p>
-                        </div>
-
-                        <div className="rounded-xl bg-red-50 px-4 py-2 text-right">
-                          <p className="text-sm font-black text-red-600">
-                            {product.quantity} left
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Min: {product.minStock}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="rounded-3xl border border-white/60 bg-white/90 p-6 shadow-xl backdrop-blur">
-                  <div className="flex items-center justify-between gap-4">
-                    <div>
-                      <h2 className="text-xl font-black text-slate-950">
-                        Recent Products
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Latest products added to inventory.
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => router.push("/products/create")}
-                      className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow transition hover:-translate-y-0.5 hover:bg-blue-500"
-                    >
-                      Add New
-                    </button>
-                  </div>
-
-                  <div className="mt-6 space-y-3">
-                    {recentProducts.length === 0 && (
-                      <p className="rounded-2xl border border-slate-100 bg-slate-50 p-5 text-sm text-slate-600">
-                        No products yet. Add your first product to get started.
-                      </p>
-                    )}
-
-                    {recentProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="group flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg"
-                      >
-                        <div>
-                          <p className="font-bold text-slate-900">
-                            {product.name}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {product.category} • SKU: {product.sku}
-                          </p>
-                        </div>
-
-                        <div className="text-right">
-                          <p className="text-sm font-black text-slate-900">
-                            {product.price.toLocaleString()} ETB
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            Qty: {product.quantity}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </section>
+              <Button
+                variant="outline"
+                onClick={() => router.push("/suppliers/create")}
+                className="flex-1 sm:flex-none"
+              >
+                <Truck aria-hidden="true" />
+                Add supplier
+              </Button>
+              <Button
+                onClick={() => router.push("/products/create")}
+                className="flex-1 sm:flex-none"
+              >
+                <Plus aria-hidden="true" />
+                Add product
+              </Button>
             </>
-          )}
-        </div>
-      </main>
+          }
+        />
+
+        {message && <p className="status-message mt-5">{message}</p>}
+
+        {stats && (
+          <>
+            <section
+              className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-5"
+              aria-label="Inventory statistics"
+            >
+              <MetricCard
+                label="Products"
+                value={stats.totalProducts}
+                description="Catalog records"
+                icon={<Boxes className="size-3.5" aria-hidden="true" />}
+              />
+              <MetricCard
+                label="Suppliers"
+                value={stats.totalSuppliers}
+                description="Contact records"
+                icon={<Truck className="size-3.5" aria-hidden="true" />}
+              />
+              <MetricCard
+                label="Low stock"
+                value={stats.lowStockProducts}
+                description="At or below minimum"
+                icon={<AlertTriangle className="size-3.5" aria-hidden="true" />}
+                alert={stats.lowStockProducts > 0}
+              />
+              <MetricCard
+                label="Inventory value"
+                value={`${stats.totalInventoryValue.toLocaleString()} ETB`}
+                description="Quantity × unit price"
+                icon={
+                  <CircleDollarSign className="size-3.5" aria-hidden="true" />
+                }
+              />
+              <div className="col-span-2 lg:col-span-1">
+                <MetricCard
+                  label="Stock units"
+                  value={stats.totalStockQuantity.toLocaleString()}
+                  description="Available quantity"
+                  icon={<PackagePlus className="size-3.5" aria-hidden="true" />}
+                />
+              </div>
+            </section>
+
+            <section className="mt-5 grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
+              <div className="overflow-hidden rounded-lg border border-border bg-surface-primary shadow-xs">
+                <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="text-sm font-semibold text-text-primary">
+                      Recently added products
+                    </h2>
+                    <p className="mt-0.5 text-xs text-text-muted">
+                      The latest inventory records available in your catalog.
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push("/products")}
+                    className="self-start sm:self-auto"
+                  >
+                    View all products
+                  </Button>
+                </div>
+
+                {recentProducts.length === 0 ? (
+                  <div className="px-4 py-10 text-center">
+                    <Boxes className="mx-auto size-5 text-text-muted" aria-hidden="true" />
+                    <p className="mt-3 text-sm font-medium text-text-primary">
+                      No products yet
+                    </p>
+                    <p className="mt-1 text-xs text-text-muted">
+                      Add your first product to begin tracking stock.
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => router.push("/products/create")}
+                      className="mt-4"
+                    >
+                      Add product
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[560px] text-left text-sm">
+                      <thead className="bg-surface-secondary text-xs text-text-muted">
+                        <tr>
+                          <th className="px-4 py-2.5 font-medium">Product</th>
+                          <th className="px-4 py-2.5 font-medium">Category</th>
+                          <th className="px-4 py-2.5 text-right font-medium">
+                            Quantity
+                          </th>
+                          <th className="px-4 py-2.5 text-right font-medium">
+                            Unit price
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentProducts.map((product) => (
+                          <tr
+                            key={product.id}
+                            className="border-t border-border transition-colors duration-150 hover:bg-surface-secondary"
+                          >
+                            <td className="px-4 py-3">
+                              <button
+                                onClick={() =>
+                                  router.push(`/products/${product.id}/edit`)
+                                }
+                                className="rounded-sm text-left font-medium text-text-primary outline-none hover:underline hover:underline-offset-4 focus-visible:ring-2 focus-visible:ring-subtle-accent/20"
+                              >
+                                {product.name}
+                              </button>
+                              <p className="mt-0.5 text-xs text-text-muted">
+                                {product.sku}
+                              </p>
+                            </td>
+                            <td className="px-4 py-3 text-text-secondary">
+                              {product.category}
+                            </td>
+                            <td className="px-4 py-3 text-right tabular-nums text-text-secondary">
+                              {product.quantity}
+                            </td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                              {product.price.toLocaleString()} ETB
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="rounded-lg border border-border bg-surface-raised p-4 shadow-xs">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-sm font-semibold text-text-primary">
+                        Stock overview
+                      </h2>
+                      <p className="mt-0.5 text-xs text-text-muted">
+                        Product lines above their minimum level.
+                      </p>
+                    </div>
+                    <p className="text-sm font-semibold tabular-nums text-text-primary">
+                      {healthyStockPercent}%
+                    </p>
+                  </div>
+                  <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-border">
+                    <div
+                      className="h-full rounded-full bg-button-primary"
+                      style={{ width: `${healthyStockPercent}%` }}
+                    />
+                  </div>
+                  <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-3">
+                    <div>
+                      <dt className="text-[11px] text-text-muted">Above minimum</dt>
+                      <dd className="mt-1 text-sm font-semibold tabular-nums text-text-primary">
+                        {healthyProductCount}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-[11px] text-text-muted">Needs attention</dt>
+                      <dd className="mt-1 text-sm font-semibold tabular-nums text-text-primary">
+                        {lowStockProducts.length}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+
+                <div className="rounded-lg border border-border bg-surface-primary p-4 shadow-xs">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h2 className="text-sm font-semibold text-text-primary">
+                        Supplier summary
+                      </h2>
+                      <p className="mt-0.5 text-xs text-text-muted">
+                        Contacts available for inventory sourcing.
+                      </p>
+                    </div>
+                    <Truck className="size-4 text-text-muted" aria-hidden="true" />
+                  </div>
+                  <p className="mt-4 text-xl font-semibold tabular-nums text-text-primary">
+                    {stats.totalSuppliers}
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push("/suppliers")}
+                    className="mt-3 w-full"
+                  >
+                    View suppliers
+                  </Button>
+                </div>
+              </div>
+            </section>
+
+            <section className="mt-4 overflow-hidden rounded-lg border border-border bg-surface-primary shadow-xs">
+              <div className="flex items-center justify-between gap-4 border-b border-border px-4 py-3">
+                <div>
+                  <h2 className="text-sm font-semibold text-text-primary">
+                    Low-stock items
+                  </h2>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    Products at or below their configured minimum.
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.push("/products")}
+                >
+                  Review inventory
+                </Button>
+              </div>
+
+              {lowStockProducts.length === 0 ? (
+                <div className="px-4 py-7 text-center text-xs text-text-muted">
+                  No products currently require restocking.
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 xl:grid-cols-3">
+                  {lowStockProducts.slice(0, 6).map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => router.push(`/products/${product.id}/edit`)}
+                      className="flex items-center justify-between gap-4 border-b border-border px-4 py-3 text-left outline-none last:border-b-0 hover:bg-surface-secondary focus-visible:bg-neutral-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-subtle-accent/20 sm:odd:border-r xl:border-r xl:[&:nth-child(3n)]:border-r-0"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-medium text-text-primary">
+                          {product.name}
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-text-muted">
+                          {product.sku} · {product.category}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right">
+                        <span className="block text-sm font-semibold tabular-nums text-button-primary">
+                          {product.quantity} left
+                        </span>
+                        <span className="block text-[11px] text-text-muted">
+                          Min. {product.minStock}
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </AppLayout>
   );
 }

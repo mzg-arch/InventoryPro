@@ -17,8 +17,8 @@ export default function HomePage() {
   }, [router]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100">
-      <p className="text-sm text-slate-600">Loading InventoryPro...</p>
+    <main className="flex min-h-screen items-center justify-center bg-page-background">
+      <p className="text-xs font-medium text-text-secondary">Loading InventoryPro...</p>
     </main>
   );
 }

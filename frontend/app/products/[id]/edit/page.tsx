@@ -2,15 +2,18 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import api from "../../../../lib/api";
 import AppLayout from "../../../../components/layout/AppLayout";
+import PageHeader from "../../../../components/layout/PageHeader";
+import { Button } from "../../../../components/ui/button";
+import { Input } from "../../../../components/ui/input";
+import { Label } from "../../../../components/ui/label";
 
 export default function EditProductPage() {
   const router = useRouter();
   const params = useParams();
-
   const productId = params.id as string;
-
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
   const [category, setCategory] = useState("");
@@ -24,7 +27,6 @@ export default function EditProductPage() {
     async function fetchProduct() {
       try {
         const token = localStorage.getItem("token");
-
         if (!token) {
           router.push("/login");
           return;
@@ -32,7 +34,6 @@ export default function EditProductPage() {
 
         const response = await api.get(`/products/${productId}`);
         const product = response.data.product;
-
         setName(product.name);
         setSku(product.sku);
         setCategory(product.category);
@@ -54,7 +55,6 @@ export default function EditProductPage() {
 
     try {
       setMessage("Updating product...");
-
       await api.patch(`/products/${productId}`, {
         name,
         sku,
@@ -64,164 +64,86 @@ export default function EditProductPage() {
         minStock: Number(minStock),
         description,
       });
-
       router.push("/products");
     } catch {
       setMessage("Failed to update product. Please check your inputs.");
     }
   }
 
+  const isLoading = message === "Loading product...";
+  const isSubmitting = message === "Updating product...";
+
   return (
     <AppLayout>
-      <div className="mx-auto max-w-5xl">
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-900 p-6 text-white shadow-2xl md:p-8">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-200">
-                Product Management
-              </p>
+      <div className="mx-auto max-w-4xl">
+        <PageHeader
+          eyebrow="Product management"
+          title="Edit product"
+          description="Update this product's details, quantity, pricing, and stock threshold."
+          actions={
+            <Button variant="outline" onClick={() => router.push("/products")}>
+              <ChevronLeft aria-hidden="true" />
+              Back to products
+            </Button>
+          }
+        />
 
-              <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
-                Edit Product
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                Update product details, stock quantity, price, category, and
-                minimum stock level.
-              </p>
-            </div>
-
-            <button
-              onClick={() => router.push("/products")}
-              className="w-full rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white backdrop-blur transition hover:-translate-y-0.5 hover:bg-white/20 md:w-auto"
-            >
-              Back to Products
-            </button>
-          </div>
-        </section>
-
-        <section className="mt-6 rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur md:p-8">
-          {message === "Loading product..." ? (
-            <p className="rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-700">
-              {message}
-            </p>
+        <section className="mt-5 rounded-lg border border-border bg-surface-primary shadow-xs">
+          {isLoading ? (
+            <p className="status-message m-4 sm:m-5">{message}</p>
           ) : (
-            <form onSubmit={handleUpdateProduct} className="space-y-6">
-              <div className="grid gap-5 md:grid-cols-2">
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Product Name
-                  </label>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
+            <form onSubmit={handleUpdateProduct}>
+              <div className="grid gap-4 p-4 sm:p-5 md:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="name">Product name</Label>
+                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input id="sku" value={sku} onChange={(e) => setSku(e.target.value)} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="category">Category</Label>
+                  <Input id="category" value={category} onChange={(e) => setCategory(e.target.value)} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="quantity">Quantity</Label>
+                  <Input id="quantity" value={quantity} onChange={(e) => setQuantity(e.target.value)} required type="number" min="0" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="price">Price (ETB)</Label>
+                  <Input id="price" value={price} onChange={(e) => setPrice(e.target.value)} required type="number" min="0" step="0.01" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="minStock">Minimum stock</Label>
+                  <Input id="minStock" value={minStock} onChange={(e) => setMinStock(e.target.value)} required type="number" min="0" />
+                </div>
+                <div className="space-y-1.5 md:col-span-2">
+                  <Label htmlFor="description">Description</Label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    placeholder="Optional product notes"
+                    className="field-control resize-y"
                   />
                 </div>
 
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    SKU
-                  </label>
-                  <input
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
-                    required
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Category
-                  </label>
-                  <input
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    required
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Quantity
-                  </label>
-                  <input
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    required
-                    type="number"
-                    min="0"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Price
-                  </label>
-                  <input
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    required
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-sm font-semibold text-slate-700">
-                    Minimum Stock
-                  </label>
-                  <input
-                    value={minStock}
-                    onChange={(e) => setMinStock(e.target.value)}
-                    required
-                    type="number"
-                    min="0"
-                    className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                  />
-                </div>
+                {message && (
+                  <p className="status-message md:col-span-2" role="status" aria-live="polite">
+                    {message}
+                  </p>
+                )}
               </div>
 
-              <div>
-                <label className="text-sm font-semibold text-slate-700">
-                  Description
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  placeholder="Optional product notes..."
-                  className="mt-2 w-full resize-none rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
-                />
-              </div>
-
-              {message && (
-                <p className="rounded-2xl bg-blue-50 p-4 text-sm font-medium text-blue-700">
-                  {message}
-                </p>
-              )}
-
-              <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => router.push("/products")}
-                  className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700 hover:shadow"
-                >
+              <div className="flex flex-col-reverse gap-2 border-t border-border bg-surface-secondary px-4 py-3 sm:flex-row sm:justify-end sm:px-5">
+                <Button type="button" variant="outline" onClick={() => router.push("/products")}>
                   Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-100 transition hover:-translate-y-0.5 hover:bg-blue-500"
-                >
-                  Save Changes
-                </button>
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Saving changes..." : "Save changes"}
+                </Button>
               </div>
             </form>
           )}

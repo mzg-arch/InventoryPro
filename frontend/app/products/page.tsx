@@ -2,8 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { AlertTriangle, Boxes, ListFilter, Plus, Search } from "lucide-react";
 import api from "../../lib/api";
 import AppLayout from "../../components/layout/AppLayout";
+import PageHeader from "../../components/layout/PageHeader";
+import MetricCard from "../../components/ui/metric-card";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 
 interface Product {
   id: string;
@@ -19,7 +24,6 @@ interface Product {
 
 export default function ProductsPage() {
   const router = useRouter();
-
   const [products, setProducts] = useState<Product[]>([]);
   const [message, setMessage] = useState("Loading products...");
   const [searchTerm, setSearchTerm] = useState("");
@@ -29,14 +33,12 @@ export default function ProductsPage() {
     async function fetchProducts() {
       try {
         const token = localStorage.getItem("token");
-
         if (!token) {
           router.push("/login");
           return;
         }
 
         const response = await api.get("/products");
-
         setProducts(response.data.products);
         setMessage("");
       } catch {
@@ -51,16 +53,12 @@ export default function ProductsPage() {
 
   async function handleDeleteProduct(id: string) {
     const confirmDelete = confirm("Are you sure you want to delete this product?");
-
-    if (!confirmDelete) {
-      return;
-    }
+    if (!confirmDelete) return;
 
     try {
       await api.delete(`/products/${id}`);
-
       setProducts((currentProducts) =>
-        currentProducts.filter((product) => product.id !== id)
+        currentProducts.filter((product) => product.id !== id),
       );
     } catch {
       alert("Failed to delete product.");
@@ -69,14 +67,11 @@ export default function ProductsPage() {
 
   const filteredProducts = products.filter((product) => {
     const searchText = searchTerm.toLowerCase();
-
     const matchesSearch =
       product.name.toLowerCase().includes(searchText) ||
       product.sku.toLowerCase().includes(searchText) ||
       product.category.toLowerCase().includes(searchText);
-
     const isLowStock = product.quantity <= product.minStock;
-
     const matchesStockFilter =
       stockFilter === "all" ||
       (stockFilter === "low" && isLowStock) ||
@@ -85,115 +80,91 @@ export default function ProductsPage() {
     return matchesSearch && matchesStockFilter;
   });
 
-  const lowStockCount = products.filter((product) => {
-    return product.quantity <= product.minStock;
-  }).length;
+  const lowStockCount = products.filter(
+    (product) => product.quantity <= product.minStock,
+  ).length;
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-7xl">
-        <section className="overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-900 p-6 text-white shadow-2xl md:p-8">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-200">
-                Inventory Management
-              </p>
-
-              <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
-                Products
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-                Manage your products, track stock levels, monitor low inventory,
-                and keep your product records organized.
-              </p>
-            </div>
-
-            <button
+      <div className="mx-auto max-w-[1440px]">
+        <PageHeader
+          eyebrow="Inventory management"
+          title="Products"
+          description="Manage product records, quantities, pricing, and minimum stock levels."
+          actions={
+            <Button
               onClick={() => router.push("/products/create")}
-              className="w-full rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-950/30 transition hover:-translate-y-0.5 hover:bg-blue-500 md:w-auto"
+              className="w-full sm:w-auto"
             >
-              Add Product
-            </button>
-          </div>
-        </section>
+              <Plus aria-hidden="true" />
+              Add product
+            </Button>
+          }
+        />
 
-        {message && (
-          <p className="mt-6 rounded-2xl bg-white/80 p-5 text-sm text-slate-700 shadow">
-            {message}
-          </p>
-        )}
-
-        {!message && (
+        {message ? (
+          <p className="status-message mt-5">{message}</p>
+        ) : (
           <>
-            <section className="mt-6 grid gap-4 md:grid-cols-3">
-              <div className="rounded-3xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                <p className="text-sm font-medium text-slate-500">
-                  Total Products
-                </p>
-                <h2 className="mt-3 text-4xl font-black text-slate-950">
-                  {products.length}
-                </h2>
-                <p className="mt-3 text-xs text-slate-500">
-                  Products saved in your account
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-red-100 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                <p className="text-sm font-medium text-slate-500">
-                  Low Stock Products
-                </p>
-                <h2 className="mt-3 text-4xl font-black text-red-600">
-                  {lowStockCount}
-                </h2>
-                <p className="mt-3 text-xs text-slate-500">
-                  Products needing restock
-                </p>
-              </div>
-
-              <div className="rounded-3xl border border-white/60 bg-white/85 p-6 shadow-lg backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl">
-                <p className="text-sm font-medium text-slate-500">
-                  Showing Results
-                </p>
-                <h2 className="mt-3 text-4xl font-black text-slate-950">
-                  {filteredProducts.length}
-                </h2>
-                <p className="mt-3 text-xs text-slate-500">
-                  Matching your search/filter
-                </p>
+            <section className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
+              <MetricCard
+                label="Total products"
+                value={products.length}
+                description="Catalog records"
+                icon={<Boxes className="size-3.5" aria-hidden="true" />}
+              />
+              <MetricCard
+                label="Low stock"
+                value={lowStockCount}
+                description="Needs attention"
+                icon={<AlertTriangle className="size-3.5" aria-hidden="true" />}
+                alert={lowStockCount > 0}
+              />
+              <div className="col-span-2 lg:col-span-1">
+                <MetricCard
+                  label="Showing"
+                  value={filteredProducts.length}
+                  description={`of ${products.length} products`}
+                  icon={<ListFilter className="size-3.5" aria-hidden="true" />}
+                />
               </div>
             </section>
 
-            <section className="mt-6 rounded-3xl border border-white/60 bg-white/90 p-4 shadow-xl backdrop-blur">
-              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                <input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by name, SKU, or category..."
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:max-w-md"
-                />
-
+            <section className="mt-4 rounded-lg border border-border bg-surface-primary p-3 shadow-xs">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="relative flex-1 sm:max-w-md">
+                  <Search
+                    className="pointer-events-none absolute top-1/2 left-3 size-3.5 -translate-y-1/2 text-text-muted"
+                    aria-hidden="true"
+                  />
+                  <Input
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search name, SKU, or category"
+                    aria-label="Search products"
+                    className="pl-9"
+                  />
+                </div>
                 <select
                   value={stockFilter}
                   onChange={(e) => setStockFilter(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:w-auto"
+                  aria-label="Filter by stock status"
+                  className="h-9 rounded-md border border-border-strong bg-surface-primary px-3 text-sm text-text-secondary shadow-xs outline-none hover:border-subtle-accent focus-visible:border-button-hover focus-visible:ring-2 focus-visible:ring-subtle-accent/10 sm:w-40"
                 >
-                  <option value="all">All Stock</option>
-                  <option value="in-stock">In Stock</option>
-                  <option value="low">Low Stock</option>
+                  <option value="all">All stock</option>
+                  <option value="in-stock">In stock</option>
+                  <option value="low">Low stock</option>
                 </select>
               </div>
-
-              <p className="mt-4 text-sm text-slate-500">
-                Showing {filteredProducts.length} of {products.length} products
-              </p>
             </section>
 
-            {/* Mobile cards */}
-            <section className="mt-5 grid gap-4 md:hidden">
+            <section className="mt-4 grid gap-3 md:hidden" aria-label="Products">
               {filteredProducts.length === 0 && (
-                <div className="rounded-3xl border border-white/60 bg-white/90 p-8 text-center text-sm text-slate-500 shadow-xl">
-                  No products match your search or filter.
+                <div className="rounded-lg border border-border bg-surface-primary px-5 py-10 text-center shadow-xs">
+                  <p className="text-sm font-medium text-text-primary">No products found</p>
+                  <p className="mt-1 text-xs text-text-muted">
+                    Adjust your search or stock filter.
+                  </p>
                 </div>
               )}
 
@@ -201,178 +172,155 @@ export default function ProductsPage() {
                 const isLowStock = product.quantity <= product.minStock;
 
                 return (
-                  <div
+                  <article
                     key={product.id}
-                    className="rounded-3xl border border-white/60 bg-white/90 p-5 shadow-xl backdrop-blur"
+                    className="rounded-lg border border-border bg-surface-primary p-4 shadow-xs"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h2 className="text-lg font-black text-slate-950">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="truncate text-sm font-semibold text-text-primary">
                           {product.name}
                         </h2>
-                        <p className="mt-1 text-xs text-slate-500">
-                          SKU: {product.sku}
+                        <p className="mt-0.5 text-xs text-text-muted">
+                          {product.sku} · {product.category}
                         </p>
                       </div>
-
-                      {isLowStock ? (
-                        <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
-                          Low
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                          Stock
-                        </span>
-                      )}
+                      <span
+                        className={`inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                          isLowStock
+                            ? "border-subtle-accent/40 bg-subtle-accent/10 text-button-primary"
+                            : "border-border bg-surface-secondary text-text-secondary"
+                        }`}
+                      >
+                        <span
+                          className={`size-1.5 rounded-full ${isLowStock ? "bg-subtle-accent" : "bg-surface-secondary0"}`}
+                        />
+                        {isLowStock ? "Low stock" : "In stock"}
+                      </span>
                     </div>
 
-                    <div className="mt-5 grid grid-cols-2 gap-3">
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">Category</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900">
-                          {product.category}
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">Quantity</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900">
+                    <dl className="mt-4 grid grid-cols-3 divide-x divide-border border-y border-border py-3">
+                      <div className="pr-3">
+                        <dt className="text-[10px] text-text-muted">Quantity</dt>
+                        <dd className="mt-1 text-xs font-semibold tabular-nums text-text-primary">
                           {product.quantity}
-                        </p>
+                        </dd>
                       </div>
-
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">Price</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900">
-                          {product.price.toLocaleString()} ETB
-                        </p>
-                      </div>
-
-                      <div className="rounded-2xl bg-slate-50 p-3">
-                        <p className="text-xs text-slate-500">Min Stock</p>
-                        <p className="mt-1 text-sm font-bold text-slate-900">
+                      <div className="px-3">
+                        <dt className="text-[10px] text-text-muted">Minimum</dt>
+                        <dd className="mt-1 text-xs font-semibold tabular-nums text-text-primary">
                           {product.minStock}
-                        </p>
+                        </dd>
                       </div>
-                    </div>
+                      <div className="pl-3">
+                        <dt className="text-[10px] text-text-muted">Price</dt>
+                        <dd className="mt-1 text-xs font-semibold tabular-nums text-text-primary">
+                          {product.price.toLocaleString()} ETB
+                        </dd>
+                      </div>
+                    </dl>
 
-                    <div className="mt-5 flex gap-2">
-                      <button
+                    <div className="mt-3 flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => router.push(`/products/${product.id}/edit`)}
-                        className="flex-1 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700"
+                        className="flex-1"
                       >
                         Edit
-                      </button>
-
-                      <button
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
                         onClick={() => handleDeleteProduct(product.id)}
-                        className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-red-500"
+                        className="flex-1"
                       >
                         Delete
-                      </button>
+                      </Button>
                     </div>
-                  </div>
+                  </article>
                 );
               })}
             </section>
 
-            {/* Desktop table */}
-            <section className="mt-5 hidden overflow-hidden rounded-3xl border border-white/60 bg-white/90 shadow-xl backdrop-blur md:block">
-              <table className="w-full border-collapse text-left">
-                <thead className="bg-slate-950 text-white">
-                  <tr>
-                    <th className="px-5 py-4 text-sm font-semibold">Name</th>
-                    <th className="px-5 py-4 text-sm font-semibold">SKU</th>
-                    <th className="px-5 py-4 text-sm font-semibold">
-                      Category
-                    </th>
-                    <th className="px-5 py-4 text-sm font-semibold">
-                      Quantity
-                    </th>
-                    <th className="px-5 py-4 text-sm font-semibold">Price</th>
-                    <th className="px-5 py-4 text-sm font-semibold">Status</th>
-                    <th className="px-5 py-4 text-sm font-semibold">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-
-                <tbody>
-                  {filteredProducts.length === 0 && (
+            <section className="mt-4 hidden overflow-hidden rounded-lg border border-border bg-surface-primary shadow-xs md:block">
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[860px] border-collapse text-left text-sm">
+                  <thead className="border-b border-border bg-surface-secondary text-xs text-text-muted">
                     <tr>
-                      <td
-                        colSpan={7}
-                        className="px-5 py-12 text-center text-sm text-slate-500"
-                      >
-                        No products match your search or filter.
-                      </td>
+                      <th className="px-4 py-2.5 font-medium">Product</th>
+                      <th className="px-4 py-2.5 font-medium">Category</th>
+                      <th className="px-4 py-2.5 text-right font-medium">Quantity</th>
+                      <th className="px-4 py-2.5 text-right font-medium">Price</th>
+                      <th className="px-4 py-2.5 font-medium">Status</th>
+                      <th className="px-4 py-2.5 text-right font-medium">Actions</th>
                     </tr>
-                  )}
-
-                  {filteredProducts.map((product) => {
-                    const isLowStock = product.quantity <= product.minStock;
-
-                    return (
-                      <tr
-                        key={product.id}
-                        className="border-t border-slate-100 transition hover:bg-blue-50/60"
-                      >
-                        <td className="px-5 py-4 text-sm font-bold text-slate-950">
-                          {product.name}
-                        </td>
-
-                        <td className="px-5 py-4 text-sm text-slate-600">
-                          {product.sku}
-                        </td>
-
-                        <td className="px-5 py-4 text-sm text-slate-600">
-                          {product.category}
-                        </td>
-
-                        <td className="px-5 py-4 text-sm text-slate-600">
-                          {product.quantity}
-                        </td>
-
-                        <td className="px-5 py-4 text-sm font-semibold text-slate-700">
-                          {product.price.toLocaleString()} ETB
-                        </td>
-
-                        <td className="px-5 py-4 text-sm">
-                          {isLowStock ? (
-                            <span className="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
-                              Low Stock
-                            </span>
-                          ) : (
-                            <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                              In Stock
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="px-5 py-4 text-sm">
-                          <div className="flex gap-2">
-                            <button
-                              onClick={() =>
-                                router.push(`/products/${product.id}/edit`)
-                              }
-                              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:text-blue-700 hover:shadow"
-                            >
-                              Edit
-                            </button>
-
-                            <button
-                              onClick={() => handleDeleteProduct(product.id)}
-                              className="rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-red-500 hover:shadow"
-                            >
-                              Delete
-                            </button>
-                          </div>
+                  </thead>
+                  <tbody>
+                    {filteredProducts.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-12 text-center text-sm text-text-muted">
+                          No products match your search or filter.
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    )}
+                    {filteredProducts.map((product) => {
+                      const isLowStock = product.quantity <= product.minStock;
+
+                      return (
+                        <tr
+                          key={product.id}
+                          className="border-t border-border transition-colors duration-150 hover:bg-surface-secondary"
+                        >
+                          <td className="px-4 py-3">
+                            <p className="font-medium text-text-primary">{product.name}</p>
+                            <p className="mt-0.5 text-xs text-text-muted">{product.sku}</p>
+                          </td>
+                          <td className="px-4 py-3 text-text-secondary">{product.category}</td>
+                          <td className="px-4 py-3 text-right tabular-nums text-text-secondary">
+                            {product.quantity}
+                          </td>
+                          <td className="px-4 py-3 text-right font-medium tabular-nums text-text-primary">
+                            {product.price.toLocaleString()} ETB
+                          </td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-medium ${
+                                isLowStock
+                                  ? "border-subtle-accent/40 bg-subtle-accent/10 text-button-primary"
+                                  : "border-border bg-surface-secondary text-text-secondary"
+                              }`}
+                            >
+                              <span
+                                className={`size-1.5 rounded-full ${isLowStock ? "bg-subtle-accent" : "bg-surface-secondary0"}`}
+                              />
+                              {isLowStock ? "Low stock" : "In stock"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push(`/products/${product.id}/edit`)}
+                              >
+                                Edit
+                              </Button>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleDeleteProduct(product.id)}
+                              >
+                                Delete
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </section>
           </>
         )}

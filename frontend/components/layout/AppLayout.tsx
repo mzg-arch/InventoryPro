@@ -1,11 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Boxes, LayoutDashboard, LogOut, Menu, Truck, X } from "lucide-react";
 import Sidebar from "./Sidebar";
+
+const navigation = [
+  { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+  { label: "Products", path: "/products", icon: Boxes },
+  { label: "Suppliers", path: "/suppliers", icon: Truck },
+];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   function handleLogout() {
@@ -14,81 +22,88 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     router.push("/login");
   }
 
+  function navigate(path: string) {
+    router.push(path);
+    setMobileMenuOpen(false);
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-page-background">
       <div className="flex min-h-screen">
         <Sidebar />
 
-        <div className="flex min-h-screen flex-1 flex-col">
-          <header className="sticky top-0 z-40 border-b border-white/60 bg-white/80 px-4 py-3 shadow-sm backdrop-blur md:hidden">
-            <div className="flex items-center justify-between">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
+          <header className="sticky top-0 z-40 border-b border-border bg-surface-primary px-4 md:hidden">
+            <div className="flex h-14 items-center justify-between gap-3">
               <button
-                onClick={() => router.push("/dashboard")}
-                className="flex items-center gap-2"
+                onClick={() => navigate("/dashboard")}
+                className="flex min-w-0 items-center gap-2.5 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-subtle-accent/20 focus-visible:ring-offset-2"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-sm font-black text-white shadow">
-                  IP
-                </div>
-
-                <div className="text-left">
-                  <p className="text-sm font-black text-slate-950">
-                    InventoryPro
-                  </p>
-                  <p className="text-xs text-slate-500">Inventory control</p>
-                </div>
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-sidebar text-surface-primary">
+                  <Boxes className="size-4" aria-hidden="true" />
+                </span>
+                <span className="truncate text-left text-sm font-semibold text-text-primary">
+                  InventoryPro
+                </span>
               </button>
 
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm"
+                onClick={() => setMobileMenuOpen((open) => !open)}
+                aria-expanded={mobileMenuOpen}
+                aria-controls="mobile-navigation"
+                aria-label={mobileMenuOpen ? "Close navigation" : "Open navigation"}
+                className="flex size-9 items-center justify-center rounded-md border border-border-strong bg-surface-primary text-text-secondary shadow-xs outline-none hover:border-subtle-accent hover:bg-neutral-hover focus-visible:ring-2 focus-visible:ring-subtle-accent/20 focus-visible:ring-offset-2 active:bg-border"
               >
-                Menu
+                {mobileMenuOpen ? (
+                  <X className="size-4" aria-hidden="true" />
+                ) : (
+                  <Menu className="size-4" aria-hidden="true" />
+                )}
               </button>
             </div>
 
             {mobileMenuOpen && (
-              <nav className="mt-4 grid gap-2 rounded-2xl border border-slate-200 bg-white p-3 shadow-lg">
-                <button
-                  onClick={() => {
-                    router.push("/dashboard");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700"
-                >
-                  Dashboard
-                </button>
+              <nav
+                id="mobile-navigation"
+                className="border-t border-border py-2"
+                aria-label="Mobile navigation"
+              >
+                {navigation.map(({ label, path, icon: Icon }) => {
+                  const active =
+                    pathname === path ||
+                    (path !== "/dashboard" && pathname.startsWith(`${path}/`));
 
-                <button
-                  onClick={() => {
-                    router.push("/products");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700"
-                >
-                  Products
-                </button>
-
-                <button
-                  onClick={() => {
-                    router.push("/suppliers");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="rounded-xl px-4 py-3 text-left text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700"
-                >
-                  Suppliers
-                </button>
+                  return (
+                    <button
+                      key={path}
+                      onClick={() => navigate(path)}
+                      aria-current={active ? "page" : undefined}
+                      className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-subtle-accent/20 ${
+                        active
+                          ? "bg-neutral-hover text-text-primary"
+                          : "text-text-secondary hover:bg-surface-secondary hover:text-text-primary active:bg-neutral-hover"
+                      }`}
+                    >
+                      <Icon className="size-4" aria-hidden="true" />
+                      {label}
+                    </button>
+                  );
+                })}
 
                 <button
                   onClick={handleLogout}
-                  className="rounded-xl px-4 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50"
+                  className="mt-1 flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium text-text-secondary outline-none hover:bg-neutral-hover hover:text-text-primary focus-visible:ring-2 focus-visible:ring-subtle-accent/20 active:bg-border"
                 >
-                  Logout
+                  <LogOut className="size-4" aria-hidden="true" />
+                  Log out
                 </button>
               </nav>
             )}
           </header>
 
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+          <main className="min-w-0 flex-1 overflow-x-hidden p-4 sm:p-5 lg:p-6 xl:p-8">
+            {children}
+          </main>
         </div>
       </div>
     </div>
